@@ -4067,6 +4067,10 @@ function GlobalStyle() {
           /* 最後に余白のページができないように */
           section:last-child { page-break-after: auto; }
         }
+        /* 狭い画面ではヘッダーのボタン列を行いっぱいに広げ、切り替えと設定を左右両端に */
+        @media (max-width: 600px) {
+          .header-actions { flex: 1 1 100%; justify-content: space-between; }
+        }
         .wheel::-webkit-scrollbar { display: none; }
         .wheel { scrollbar-width: none; -ms-overflow-style: none; }
         input:focus, button:focus { outline: 2.5px solid ${C.morning}; outline-offset: 1px; }
@@ -4261,7 +4265,9 @@ export default function App() {
             <div style={{ fontSize: 21, fontWeight: 800, letterSpacing: "0.06em", color: C.ink }}>しが血圧ノート</div>
             <div style={{ fontSize: 11.5, letterSpacing: "0.12em", color: C.inkSoft }}>毎日の記録と高血圧の知識</div>
           </div>
-          <div className="flex items-center gap-2">
+          {/* 狭い画面では折り返して2段目になる。その際は切り替えを左端・設定を右端に離す
+              （CSSは GlobalStyle の .header-actions を参照） */}
+          <div className="flex items-center gap-2 header-actions">
           <div className="flex gap-1" style={{ background: C.tint, borderRadius: 3, padding: 3 }}>
             {[["patient", "患者"], ["clinician", "医療者"]].map(([k, l]) => (
               <button key={k} onClick={() => setMode(k)}
