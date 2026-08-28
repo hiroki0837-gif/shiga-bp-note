@@ -1333,13 +1333,24 @@ function WeekGrid({ dates, records, plan }) {
             </tr>
           ))}
           <tr>
-            <th style={{ ...th, textAlign: "left" }}>お薬 {planList(plan).map(([, jp]) => jp).join("/")}</th>
+            {/* 枠が多いと「朝/昼/夕/寝る前」がセル幅を超えて隣のチェック印に重なるため、
+                複数枠のときは2行に分け、折り返しも許す */}
+            {planList(plan).length > 1 ? (
+              <th style={{ ...th, textAlign: "left", whiteSpace: "normal" }}>
+                お薬<br />
+                <span style={{ fontWeight: 600, fontSize: 10, color: C.inkSoft }}>
+                  {planList(plan).map(([, jp]) => jp).join("/")}
+                </span>
+              </th>
+            ) : (
+              <th style={{ ...th, textAlign: "left" }}>お薬 {planList(plan).map(([, jp]) => jp).join("/")}</th>
+            )}
             {dates.map((d) => {
               const r = records[d];
               const mk = (v) => (v === 1 ? "✓" : v === 2 ? "×" : "・");
               const col = (v) => (v === 2 ? C.alert : v === 1 ? C.good : C.line);
               return (
-                <td key={d} style={td}>
+                <td key={d} style={{ ...td, whiteSpace: "normal" }}>
                   {r ? planList(plan).map(([k], i) => (
                     <span key={k} style={{ color: col(r[k]), fontWeight: 800 }}>{mk(r[k])}{i < planList(plan).length - 1 ? " " : ""}</span>
                   )) : <span style={{ color: C.line }}>—</span>}
