@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>しが血圧ノート 導入の手引き</title>
+<style>
+  :root { --blue:#54A9F0; --blue-deep:#1B77CB; --pale:#F1FAFF; --ink:#2B3646; --sub:#46525F; --line:#D9E9F6; --good:#33A165; --bad:#CC6455; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#e9eef3; font-family:"Meiryo","メイリオ",sans-serif; color:var(--ink); }
+  .bar { background:#fff; border-bottom:3px solid var(--blue); padding:12px 20px; }
+  .bar button { padding:9px 16px; border:1.5px solid var(--blue-deep); background:var(--blue-deep); color:#fff; border-radius:3px; font-size:14px; font-weight:700; cursor:pointer; }
+  .sheet { width:210mm; margin:18px auto; background:#fff; padding:16mm 15mm; page-break-after:always; }
+  .sheet:last-of-type { page-break-after:auto; }
+  h1 { font-size:25px; margin:0 0 4px; }
+  .sub { font-size:13px; color:var(--sub); margin:0 0 18px; padding-bottom:10px; border-bottom:2px solid var(--blue); }
+  h2 { font-size:16.5px; margin:22px 0 9px; border-left:5px solid var(--blue-deep); padding-left:10px; }
+  h2:first-of-type { margin-top:6px; }
+  h3 { font-size:14px; margin:14px 0 5px; color:var(--blue-deep); }
+  p, li, td, th { font-size:13px; line-height:1.9; }
+  p { margin:0 0 9px; }
+  ul, ol { margin:0 0 10px; padding-left:21px; }
+  li { margin-bottom:2px; }
+  table { border-collapse:collapse; width:100%; margin:0 0 12px; }
+  th, td { border:1px solid var(--line); padding:6px 9px; text-align:left; vertical-align:top; }
+  th { background:var(--pale); font-weight:700; white-space:nowrap; }
+  .note { background:var(--pale); border-left:5px solid var(--blue-deep); padding:10px 12px; border-radius:4px; margin:0 0 12px; }
+  .note p:last-child, .warn p:last-child { margin-bottom:0; }
+  .warn { background:#FDF6F4; border-left:5px solid var(--bad); padding:10px 12px; border-radius:4px; margin:0 0 12px; }
+  .path { background:var(--pale); border:1px solid var(--line); border-radius:3px; padding:1px 6px; font-weight:700; font-size:12.5px; white-space:nowrap; }
+  code { background:var(--pale); padding:1px 5px; border-radius:3px; font-size:12px; }
+  .foot { margin-top:22px; padding-top:9px; border-top:1px solid var(--line); font-size:11px; color:var(--sub); }
+  @media print { body{background:#fff;} .bar{display:none;} .sheet{margin:0;width:auto;padding:13mm 12mm;} @page{size:A4;margin:0;} }
+  ol.big > li { margin-bottom:10px; }
+  .chk { list-style:none; padding-left:0; }
+  .chk li { padding-left:24px; position:relative; margin-bottom:5px; }
+  .chk li::before { content:"☐"; position:absolute; left:0; font-size:15px; }
+  .cost th:last-child, .cost td:last-child { text-align:right; white-space:nowrap; }
+
+</style>
+</head>
+<body>
+<div class="bar"><button onclick="window.print()">印刷 / PDFで保存</button></div>
+
+<section class="sheet">
+  <h1>しが血圧ノート　導入の手引き</h1>
+  <p class="sub">施設に導入する方へ　／　滋賀医科大学医学部附属病院 循環器内科</p>
+
+  <h2>1. 全体像</h2>
+  <p>患者さんのスマートフォンで血圧を記録し、受診時にQRコードで医療機関に渡す仕組みです。サーバに患者データを置かないため、個人情報の管理が単純になります。</p>
+  <table>
+    <tr><th>患者用アプリ</th><td>患者さんのスマートフォンで開く。記録はその端末の中だけに保存</td></tr>
+    <tr><th>医療者モード</th><td>診察室でQRを読み、その場でグラフや平均を見る</td></tr>
+    <tr><th>受付端末</th><td>患者さんが自分でQRをかざし、自動で印刷（任意）</td></tr>
+  </table>
+  <div class="note"><p>アプリのインストールは不要です。QRコードを読み取ってブラウザで開くだけで使えます。</p></div>
+
+  <h2>2. 導入の段階</h2>
+  <p>いきなり全部そろえる必要はありません。次の順で進めると、無駄な投資になりません。</p>
+  <table>
+    <tr><th>第1段階</th><td>公開して、数名の患者さんに試してもらう</td><td>実質0円</td></tr>
+    <tr><th>第2段階</th><td>診察室で医療者モードを使う</td><td>既存のiPad・PCで可</td></tr>
+    <tr><th>第3段階</th><td>受付端末を設置する</td><td>7〜19万円</td></tr>
+    <tr><th>第4段階</th><td>CSVを貯めて研究に使う</td><td>倫理審査が必要</td></tr>
+  </table>
+
+  <h2>3. 費用の目安</h2>
+  <table class="cost">
+    <tr><th>項目</th><th>内容</th><th>金額</th></tr>
+    <tr><td>サーバ</td><td>Vercelの無料枠で足ります</td><td>0円</td></tr>
+    <tr><td>独自ドメイン</td><td>使わなくても動きます</td><td>年1,500〜4,000円</td></tr>
+    <tr><td>受付端末</td><td>Windowsノート。中古でも可</td><td>4〜10万円</td></tr>
+    <tr><td>バーコードリーダー</td><td>据置型。カメラでも代用可</td><td>1.5〜4万円</td></tr>
+    <tr><td>プリンタ</td><td>既存のものを使えます</td><td>0〜3万円</td></tr>
+    <tr><td>設置台</td><td>端末を固定する台</td><td>5,000〜2万円</td></tr>
+    <tr><td>印刷物</td><td>院内のプリンタで刷れます</td><td>0〜2万円</td></tr>
+  </table>
+  <p>2026年8月時点の目安です。金額に表れないものとして、設置と職員説明の時間、研究利用時の倫理審査の期間があります。</p>
+
+  <h2>4. 準備するもの</h2>
+  <ul class="chk">
+    <li>GitHubのアカウント（無料）</li>
+    <li>Vercelのアカウント（無料。GitHubでログインできます）</li>
+    <li>公開するURLの決定（あとから変えられません）</li>
+    <li>導入施設として載せる情報（名称・診療科・住所・院長名・ホームページ）</li>
+  </ul>
+  <div class="warn">
+    <p><b>URLは一度決めたら変えないでください。</b>記録はブラウザがURLごとに保存します。URLを変えると、患者さんがそれまで入れた記録が見えなくなります。</p>
+  </div>
+
+  <div class="foot">作成　滋賀医科大学医学部附属病院　循環器内科</div>
+</section>
+
+<section class="sheet">
+  <h1>公開する手順</h1>
+  <p class="sub">GitHub と Vercel を使います。無料です</p>
+
+  <h2>5. 手元で動かして確認する</h2>
+  <ol class="big">
+    <li>Node.js（18以上）を入れます</li>
+    <li>プロジェクトのフォルダで <code>npm install</code> を実行します</li>
+    <li><code>npm run dev</code> を実行し、表示されたアドレス（http&#58;//localhost:5173）を開きます</li>
+    <li>記録を入れる、QRを出す、医療者モードで読む、まで一通り触ります</li>
+  </ol>
+
+  <h2>6. GitHub に置く</h2>
+  <ol class="big">
+    <li>GitHubで新しいリポジトリを作ります（Private で構いません）</li>
+    <li>プロジェクトのフォルダをそこに push します</li>
+  </ol>
+  <p><code>node_modules</code> と <code>dist</code> は <code>.gitignore</code> で除外済みです。そのまま push してください。</p>
+
+  <h2>7. Vercel に公開する</h2>
+  <ol class="big">
+    <li>Vercelにログインし、<b>New Project</b> を押します</li>
+    <li>先ほどのリポジトリを選びます</li>
+    <li>設定はそのままで <b>Deploy</b> を押します（<code>vercel.json</code> の内容が使われます）</li>
+    <li>数分で公開されます。表示されたURLを控えます</li>
+  </ol>
+  <p>以後は、GitHubに push するたびに自動で反映されます。URLは変わりません。</p>
+
+  <h2>8. 実機で確かめる</h2>
+  <p>公開したら、必ず実際の端末で次を確認してください。ここは机上では分かりません。</p>
+  <ul class="chk">
+    <li>スマートフォンでQRを読み、アプリが開く</li>
+    <li>ホーム画面に追加できる</li>
+    <li>記録を入れて、閉じて開き直しても残っている</li>
+    <li>暗証番号を設定し、開き直して解錠できる</li>
+    <li>Face ID・指紋が登録できる（対応端末のみ）</li>
+    <li>受診用QRが出て、医療者モードのカメラで読める</li>
+    <li>印刷したときに表が途中で切れていない</li>
+  </ul>
+  <div class="note">
+    <p>カメラでの読み取りは、画面の明るさを上げ、まっすぐ向けると成功しやすくなります。斜めから見ると読めないことがあります。</p>
+  </div>
+
+  <h2>9. 掲示物を作る</h2>
+  <ol class="big">
+    <li><code>docs/poster-qr.html</code> をブラウザで開きます</li>
+    <li>上の欄に、公開したURLを入れて<span class="path">QRコードを作り直す</span>を押します</li>
+    <li><span class="path">印刷 / PDFで保存</span>で2枚出ます（1枚目が掲示、2枚目がリーフレット）</li>
+    <li>実際に印刷したものを、スマートフォンで読み取れるか確かめます</li>
+  </ol>
+
+  <div class="foot">作成　滋賀医科大学医学部附属病院　循環器内科</div>
+</section>
+
+<section class="sheet">
+  <h1>受付端末の設置と運用開始</h1>
+
+  <h2>10. 受付端末を置く</h2>
+  <ol class="big">
+    <li>端末で <code>https&#58;//shiga-bp-note.vercel.app/terminal.html</code> を開き、ブックマークします</li>
+    <li>ブラウザを全画面にします</li>
+    <li>設定（画面すみの歯車）を開き、まず<b>暗証番号</b>を決めます</li>
+    <li>読み取る方法（カメラ／読み取り機）、印刷、CSV、端末名を設定します</li>
+    <li><span class="path">テスト印刷</span>で紙の出かたを確かめます</li>
+  </ol>
+  <p>プリンタはブラウザから選べません。出したいプリンタを、端末の「通常使うプリンター」に設定してください。</p>
+  <div class="note">
+    <p>印刷画面を出さずに刷るには、Chromeを <code>--kiosk-printing</code> を付けて起動します。デスクトップのショートカットに書いておくと便利です。</p>
+  </div>
+
+  <h2>11. 職員への説明</h2>
+  <ul class="chk">
+    <li><code>docs/manual-staff.html</code> を印刷して配る</li>
+    <li>受付での声かけを決める（例：「お持ちのスマホでQRを出してかざしてください」）</li>
+    <li>読めなかったときの対応を決める（紙の手帳で受ける、など）</li>
+    <li>印刷に失敗したときの再印刷の場所（設定 → 直近の読み取り）を共有する</li>
+  </ul>
+
+  <h2>12. 患者さんへの案内</h2>
+  <ul class="chk">
+    <li><code>docs/manual-patient.html</code> を印刷して配る</li>
+    <li>リーフレットを外来に置く</li>
+    <li>掲示物を受付や血圧計の横に貼る</li>
+    <li>最初の数名は、その場で一緒に設定まで済ませる</li>
+  </ul>
+  <p>最初の患者さんは、アプリに慣れている方を選ぶとつまずきが少なくなります。うまくいった例を職員が見ておくと、次から案内しやすくなります。</p>
+
+  <h2>13. 始めたあとに見ること</h2>
+  <table>
+    <tr><th>1週間後</th><td>実際に使えているか、記録が続いているかを数名に聞く</td></tr>
+    <tr><th>1か月後</th><td>受付での所要時間、読み取り失敗の頻度を確認する</td></tr>
+    <tr><th>3か月後</th><td>続けている割合、外来での使われ方を振り返る</td></tr>
+  </table>
+
+  <h2>14. 更新するとき</h2>
+  <ol class="big">
+    <li>ソースを直して GitHub に push します（自動で反映されます）</li>
+    <li>QRの形式を変えたときは、<b>受付端末を先に更新</b>します</li>
+    <li>患者さんの端末は、アプリを閉じて開き直すと新しくなります</li>
+  </ol>
+
+  <h2>15. 研究に使う場合</h2>
+  <div class="warn">
+    <p><b>CSVを貯め始める前に、倫理審査の方針を決めてください。</b>あとから決めると、集めたデータが使えなくなることがあります。</p>
+  </div>
+  <ul class="chk">
+    <li>研究計画書と倫理審査の申請</li>
+    <li>手帳番号とカルテ番号の対応表を、誰がどこで管理するか決める</li>
+    <li>CSVの保存場所と、廃棄の方法を決める</li>
+    <li>患者さんへの説明（オプトアウトで足りるか、同意が要るか）</li>
+  </ul>
+  <p>アプリの有償提供を考える場合は、大学の産学連携部門にも相談してください。職務として作ったものの権利と、利益相反の整理が必要になります。</p>
+
+  <h2>16. 困ったとき</h2>
+  <table>
+    <tr><th>患者さんの記録が消えた</th><td>ブラウザの履歴やサイトデータを消すと記録も消えます。復元はできません</td></tr>
+    <tr><th>QRが読めない</th><td>画面を明るくし、まっすぐ向けてもらいます。それでも読めなければ画面を直接見せてもらいます</td></tr>
+    <tr><th>印刷されない</th><td>設定 → 直近の読み取り から、最新5件を出し直せます</td></tr>
+    <tr><th>暗証番号を忘れた</th><td>記録は復元できません。すべて消して最初からになります</td></tr>
+  </table>
+
+  <div class="foot">作成　滋賀医科大学医学部附属病院　循環器内科</div>
+</section>
+
+</body>
+</html>

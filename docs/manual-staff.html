@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>しが血圧ノート 運用の手引き（医療者向け）</title>
+<style>
+  :root { --blue:#54A9F0; --blue-deep:#1B77CB; --pale:#F1FAFF; --ink:#2B3646; --sub:#46525F; --line:#D9E9F6; --good:#33A165; --bad:#CC6455; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#e9eef3; font-family:"Meiryo","メイリオ",sans-serif; color:var(--ink); }
+  .bar { background:#fff; border-bottom:3px solid var(--blue); padding:12px 20px; }
+  .bar button { padding:9px 16px; border:1.5px solid var(--blue-deep); background:var(--blue-deep); color:#fff; border-radius:3px; font-size:14px; font-weight:700; cursor:pointer; }
+  .sheet { width:210mm; margin:18px auto; background:#fff; padding:16mm 15mm; page-break-after:always; }
+  .sheet:last-of-type { page-break-after:auto; }
+  h1 { font-size:25px; margin:0 0 4px; }
+  .sub { font-size:13px; color:var(--sub); margin:0 0 18px; padding-bottom:10px; border-bottom:2px solid var(--blue); }
+  h2 { font-size:16.5px; margin:22px 0 9px; border-left:5px solid var(--blue-deep); padding-left:10px; }
+  h2:first-of-type { margin-top:6px; }
+  h3 { font-size:14px; margin:14px 0 5px; color:var(--blue-deep); }
+  p, li, td, th { font-size:13px; line-height:1.9; }
+  p { margin:0 0 9px; }
+  ul, ol { margin:0 0 10px; padding-left:21px; }
+  li { margin-bottom:2px; }
+  table { border-collapse:collapse; width:100%; margin:0 0 12px; }
+  th, td { border:1px solid var(--line); padding:6px 9px; text-align:left; vertical-align:top; }
+  th { background:var(--pale); font-weight:700; white-space:nowrap; }
+  .note { background:var(--pale); border-left:5px solid var(--blue-deep); padding:10px 12px; border-radius:4px; margin:0 0 12px; }
+  .note p:last-child, .warn p:last-child { margin-bottom:0; }
+  .warn { background:#FDF6F4; border-left:5px solid var(--bad); padding:10px 12px; border-radius:4px; margin:0 0 12px; }
+  .path { background:var(--pale); border:1px solid var(--line); border-radius:3px; padding:1px 6px; font-weight:700; font-size:12.5px; white-space:nowrap; }
+  code { background:var(--pale); padding:1px 5px; border-radius:3px; font-size:12px; }
+  .foot { margin-top:22px; padding-top:9px; border-top:1px solid var(--line); font-size:11px; color:var(--sub); }
+  @media print { body{background:#fff;} .bar{display:none;} .sheet{margin:0;width:auto;padding:13mm 12mm;} @page{size:A4;margin:0;} }
+</style>
+</head>
+<body>
+<div class="bar"><button onclick="window.print()">印刷 / PDFで保存</button></div>
+
+<section class="sheet">
+  <h1>しが血圧ノート　運用の手引き</h1>
+  <p class="sub">医療者・受付スタッフ向け　／　滋賀医科大学医学部附属病院 循環器内科</p>
+
+  <h2>1. 画面の構成</h2>
+  <table>
+    <tr><th>URL</th><th>用途</th><th>置く場所</th></tr>
+    <tr><td><code>https&#58;//shiga-bp-note.vercel.app/</code></td><td>患者用アプリ（医療者モードあり）</td><td>患者さんのスマートフォン、診察室のiPad</td></tr>
+    <tr><td><code>https&#58;//shiga-bp-note.vercel.app/terminal.html</code></td><td>受付端末。しが血圧ノートと心不全手帳の両方に対応</td><td>外来受付、血圧計の横</td></tr>
+    <tr><td><code>…/?kiosk=1</code></td><td>患者用アプリを受付端末として起動（予備）</td><td>受付端末が使えないとき</td></tr>
+  </table>
+
+  <h2>2. 診察室で使う（医療者モード）</h2>
+  <h3>入りかた</h3>
+  <p>患者用アプリを開き、画面右上の<span class="path">医療者</span>を押します。患者さんの端末ではなく、診察室のiPadやパソコンで開いてください。</p>
+  <h3>読み取り</h3>
+  <ul>
+    <li><span class="path">カメラで読み取る</span>… 患者さんのスマートフォンの画面を、枠の中に入れてもらいます</li>
+    <li><b>バーコードリーダー</b>… 入力欄を選んでから読み取ると、そのまま入ります</li>
+    <li><b>貼り付け</b>… 数字の列を入力欄に貼って<span class="path">読み込む</span>を押します</li>
+  </ul>
+  <p>複数枚に分かれているときは、続けて読み取ってください。「2 / 3 枚」と表示されます。</p>
+  <h3>見られるもの</h3>
+  <ul>
+    <li>サマリー（年齢・性別・手帳番号、平均血圧、朝夜別の平均、脈拍、服薬の達成率）</li>
+    <li>気になるサイン（判定は控えめにしてあります。不整脈マークについては判定しません）</li>
+    <li>グラフ、週ごとの表</li>
+    <li>CSVの保存、印刷 / PDF</li>
+  </ul>
+
+  <h2>3. 受付端末を置く</h2>
+  <h3>準備</h3>
+  <ol>
+    <li>院内の端末で <code>https&#58;//shiga-bp-note.vercel.app/terminal.html</code> を開き、ブックマークします</li>
+    <li>ブラウザを全画面にして、患者さんが操作しやすい高さに置きます</li>
+    <li>カメラの使用を許可します（初回に確認が出ます）</li>
+  </ol>
+  <h3>患者さんの操作</h3>
+  <p>QRをかざすだけです。そろうと自動で印刷され、完了の画面が出ます。10秒で初期画面に戻ります。90秒操作がなければ、読みかけの記録も消えます。</p>
+  <p>完了画面の文言は、院内の運用に合わせて設定で選べます（次項）。</p>
+  <div class="note">
+    <p><b>ダイアログを出さずに印刷するには</b>、Chrome を <code>--kiosk-printing</code> を付けて起動してください。<br />
+    例：<code>chrome.exe --kiosk-printing "https&#58;//shiga-bp-note.vercel.app/terminal.html"</code></p>
+    <p>バーコードリーダーをつなぐと、カメラを使わずに読み取れます。据置型のほうが患者さんには簡単です。</p>
+  </div>
+
+  <h2>4. 受付端末の設定</h2>
+  <p>画面下の<b>歯車のボタン</b>から開きます。暗証番号で保護されます。</p>
+  <h3>はじめに暗証番号を決める</h3>
+  <ol>
+    <li>歯車を押します（未設定のうちは誰でも開けます）</li>
+    <li>「暗証番号」の<span class="path">暗証番号を決める</span>を押します</li>
+    <li>4桁を入れ、確認のためもう一度入れます</li>
+  </ol>
+  <h3>読み取りのしかた</h3>
+  <p>設定の<b>読み取る方法</b>で、患者さんへの案内と画面が変わります。</p>
+  <table>
+    <tr><th>カメラ</th><td>端末のカメラの映像が出ます。「下のカメラに向けてください」と案内します</td></tr>
+    <tr><th>読み取り機</th><td>カメラは動かず、リーダーからの入力だけを待ちます。「読み取り機にかざしてください」と案内します</td></tr>
+  </table>
+  <p>据置型のバーコードリーダーをお使いの場合は「読み取り機」を選んでください。カメラが動かないぶん、動作も軽くなります。</p>
+
+  <h3>設定できること</h3>
+  <table>
+    <tr><th>読み取る方法</th><td>カメラ／読み取り機（上記）</td></tr>
+    <tr><th>読み取ったら印刷する</th><td>紙に出すかどうか。CSVだけ欲しい端末では「しない」にします</td></tr>
+    <tr><th>CSVも保存する</th><td>読み取るたびにCSVに追記します</td></tr>
+    <tr><th>紙を受け取る人</th><td><b>患者さん</b>＝受付のプリンタに出て患者さんが取る／<b>医療者側</b>＝医療者側のプリンタに出る</td></tr>
+    <tr><th>読み取ったあとの案内</th><td><b>診察までお待ちください</b>／<b>受付にお声かけください</b>から選びます</td></tr>
+    <tr><th>CSVの保存先</th><td><span class="path">フォルダを選ぶ</span>で共有フォルダなどを指定します</td></tr>
+    <tr><th>端末の名前</th><td>「外来受付1」など。CSVに記録され、どの端末から出たか分かります</td></tr>
+  </table>
+  <p>設定を変えたあとは、いちばん下の<span class="path">設定を保存してもどる</span>を押します。やめるときは<span class="path">保存せずにもどる</span>を押すと、開く前の状態に戻ります。</p>
+  <p>完了画面は、この2つの組み合わせで変わります。</p>
+  <table>
+    <tr><th>設定</th><th>大きく出る文字</th><th>その下</th></tr>
+    <tr><td>患者さん＋お待ちください</td><td>用紙をお取りください</td><td>診察までお待ちください</td></tr>
+    <tr><td>医療者側＋お待ちください</td><td>読み取りました</td><td>診察までお待ちください</td></tr>
+    <tr><td>医療者側＋受付にお声かけ</td><td>読み取りました</td><td>受付にお声かけください</td></tr>
+  </table>
+
+  <h3>プリンタの指定</h3>
+  <p><b>プリンタそのものはブラウザから選べません。</b>どのプリンタに出るかは、受付端末の「通常使うプリンター」で決まります。医療者側のプリンタに出したい場合は、端末側でそちらを既定に設定してください。ネットワークプリンタでも同じです。</p>
+  <p>その都度プリンタを選びたい場合は、設定の<b>印刷のタイミング</b>を「ボタンを押してから」にしてください。完了画面に<span class="path">印刷する</span>が出て、押すと印刷画面が開きます。ただしChromeを <code>--kiosk-printing</code> で起動しているときは画面が開かず、そのまま既定のプリンタに出ます。</p>
+  <h3>印刷の体裁</h3>
+  <table>
+    <tr><th>印刷のタイミング</th><td>読み取ったら自動／ボタンを押してから</td></tr>
+    <tr><th>用紙</th><td>A4／A5／レター</td></tr>
+    <tr><th>向き</th><td>たて／よこ（項目が多いときは「よこ」が読みやすくなります）</td></tr>
+    <tr><th>文字の大きさ</th><td>ふつう／大きめ</td></tr>
+  </table>
+  <p>設定画面の<span class="path">テスト印刷</span>で、いまの設定のまま1枚出して確認できます。</p>
+
+  <h3>印刷に失敗したとき</h3>
+  <p>紙切れや電源が入っていない場合でも、患者さんの画面は正常に完了します。設定の中の<b>「直近の読み取り」</b>に最新5件が残っているので、そこから<span class="path">もう一度印刷</span>で出し直せます。</p>
+  <p>この控えは端末のメモリにだけあり、画面を閉じたり読み込み直したりすると消えます。記録が端末に残らないための作りです。</p>
+  <p>印刷物の先頭には<b>受付時刻と手帳番号</b>が大きく印字されます。複数人分が積み重なっても取り違えないようにするためです。</p>
+  <div class="warn">
+    <p><b>フォルダ指定はChrome / Edgeのみ</b>です。iPadのSafariでは使えず、1回ぶんずつダウンロードに保存されます。CSVを貯める端末はWindowsかMacのChromeにしてください。</p>
+  </div>
+  <p>CSVは選んだフォルダの <code>受診記録_累積.csv</code> に、1日1行ずつ足されていきます。受診のたびに期間が重なるため、<b>同じ日の行が複数回入ります</b>。解析のときは、手帳番号と日付でまとめ、読取日時のいちばん新しい行を採用してください。</p>
+
+  <div class="foot">作成　滋賀医科大学医学部附属病院　循環器内科</div>
+</section>
+
+<section class="sheet">
+  <h1>データと運用の注意</h1>
+  <p class="sub">導入・更新・個人情報の取り扱い</p>
+
+  <h2>5. QRコードに入っている情報</h2>
+  <table>
+    <tr><th>入っているもの</th><td>手帳番号（乱数10桁）、年齢、性別、測定値、不整脈マーク、服薬、記録時刻、目標値、教材の進み具合</td></tr>
+    <tr><th>入っていないもの</th><td>氏名、生年月日、カルテ番号、メモの内容、体重（血圧ノートの月1回の体重）</td></tr>
+  </table>
+  <p>先頭の1桁が手帳の種類を表します（8＝しが血圧ノート、9＝心不全手帳）。受付端末はこれを見て自動で振り分けるため、患者さんが選ぶ必要はありません。</p>
+  <div class="warn">
+    <p><b>手帳番号とカルテ番号の対応表は、施設側で作ることになります。</b>この対応表は事実上の個人情報です。診療録と同等の管理をしてください。</p>
+    <p>QRを印刷した紙、受付端末に貯まるCSVも同様です。保管場所と廃棄の方法を先に決めておいてください。</p>
+  </div>
+
+  <h2>6. 更新するときの順番</h2>
+  <p>QRコードの形式を変えたときは、<b>受付端末を先に更新</b>してください。逆にすると、新しい患者アプリのQRを受付端末が読めません。</p>
+  <p>形式の変更は番号で管理しています。古い形式のQRも読めるようにしてあるので、患者さんの更新が遅れても支障はありません。</p>
+
+  <h2>7. 導入施設を追加する</h2>
+  <p>ソースの <code>FACILITIES</code> に追記します（<code>src/App.jsx</code> と <code>src/Terminal.jsx</code> の両方）。</p>
+  <ul>
+    <li>名称、診療科、市町、住所、院長名、ホームページのURL、緯度経度</li>
+    <li>滋賀県外の施設は <code>pref</code> を付けると、地図には出さず一覧のみに載ります</li>
+    <li>緯度経度はおおよそで構いません。市町の目印があるので位置は伝わります</li>
+  </ul>
+
+  <h2>8. 患者さんに説明するときのポイント</h2>
+  <ul>
+    <li>ダウンロード不要、無料、広告なし</li>
+    <li>記録は端末の中だけ。外に送られない</li>
+    <li>ホーム画面に追加すると次から早い</li>
+    <li>朝は起きて1時間以内・薬の前、夜は寝る前</li>
+    <li>暗証番号を忘れると記録は戻せない</li>
+    <li>機種変更では記録が引き継がれない</li>
+  </ul>
+
+  <h2>9. アプリが判定すること・しないこと</h2>
+  <table>
+    <tr><th>判定する</th><td>目標との比較、記録の続き具合、服薬の達成率、血圧が著しく高い日</td></tr>
+    <tr><th>判定しない</th><td>不整脈マークの回数（表示のみ）、診断、薬の増減</td></tr>
+  </table>
+  <p>「気になるサイン」は受診の目安を伝えるもので、治療の指示はしません。</p>
+
+  <h2>10. 出典</h2>
+  <ul>
+    <li>教材：日本高血圧学会「高血圧管理・治療ガイドライン2025」</li>
+    <li>妊娠・授乳：国立成育医療研究センター 妊娠と薬情報センター（2025年8月改訂）</li>
+    <li>地図：国土数値情報「行政区域」、Natural Earth</li>
+  </ul>
+  <p>公開前に、薬剤の製品名と妊娠・授乳の記載を添付文書と照らして確認してください。</p>
+
+  <div class="foot">作成　滋賀医科大学医学部附属病院　循環器内科</div>
+</section>
+
+</body>
+</html>

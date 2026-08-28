@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>しが血圧ノート 使い方（患者向け）</title>
+<style>
+  :root { --blue:#54A9F0; --blue-deep:#1B77CB; --pale:#F1FAFF; --ink:#2B3646; --sub:#46525F; --line:#D9E9F6; --good:#33A165; --bad:#CC6455; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#e9eef3; font-family:"Meiryo","メイリオ",sans-serif; color:var(--ink); }
+  .bar { background:#fff; border-bottom:3px solid var(--blue); padding:12px 20px; }
+  .bar button { padding:9px 16px; border:1.5px solid var(--blue-deep); background:var(--blue-deep); color:#fff; border-radius:3px; font-size:14px; font-weight:700; cursor:pointer; }
+  .sheet { width:210mm; margin:18px auto; background:#fff; padding:16mm 15mm; page-break-after:always; }
+  .sheet:last-of-type { page-break-after:auto; }
+  h1 { font-size:25px; margin:0 0 4px; }
+  .sub { font-size:13px; color:var(--sub); margin:0 0 18px; padding-bottom:10px; border-bottom:2px solid var(--blue); }
+  h2 { font-size:16.5px; margin:22px 0 9px; border-left:5px solid var(--blue-deep); padding-left:10px; }
+  h2:first-of-type { margin-top:6px; }
+  h3 { font-size:14px; margin:14px 0 5px; color:var(--blue-deep); }
+  p, li, td, th { font-size:13px; line-height:1.9; }
+  p { margin:0 0 9px; }
+  ul, ol { margin:0 0 10px; padding-left:21px; }
+  li { margin-bottom:2px; }
+  table { border-collapse:collapse; width:100%; margin:0 0 12px; }
+  th, td { border:1px solid var(--line); padding:6px 9px; text-align:left; vertical-align:top; }
+  th { background:var(--pale); font-weight:700; white-space:nowrap; }
+  .note { background:var(--pale); border-left:5px solid var(--blue-deep); padding:10px 12px; border-radius:4px; margin:0 0 12px; }
+  .note p:last-child, .warn p:last-child { margin-bottom:0; }
+  .warn { background:#FDF6F4; border-left:5px solid var(--bad); padding:10px 12px; border-radius:4px; margin:0 0 12px; }
+  .path { background:var(--pale); border:1px solid var(--line); border-radius:3px; padding:1px 6px; font-weight:700; font-size:12.5px; white-space:nowrap; }
+  code { background:var(--pale); padding:1px 5px; border-radius:3px; font-size:12px; }
+  .foot { margin-top:22px; padding-top:9px; border-top:1px solid var(--line); font-size:11px; color:var(--sub); }
+  @media print { body{background:#fff;} .bar{display:none;} .sheet{margin:0;width:auto;padding:13mm 12mm;} @page{size:A4;margin:0;} }
+</style>
+</head>
+<body>
+<div class="bar"><button onclick="window.print()">印刷 / PDFで保存</button></div>
+
+<section class="sheet">
+  <h1>しが血圧ノート　使い方</h1>
+  <p class="sub">おうちで測った血圧を記録するアプリです　／　滋賀医科大学医学部附属病院 循環器内科</p>
+
+  <h2>1. はじめる</h2>
+  <ol>
+    <li>外来でお渡ししたQRコードを、スマートフォンのカメラで読み取ります。</li>
+    <li>画面に出たリンクを押すと開きます。ダウンロードも登録も要りません。無料です。</li>
+    <li>最初に <b>生年月日・性別・身長</b> を入れます。年・月・日はスクロールして選びます。</li>
+    <li>「はじめる」を押すと使えます。あとで入れる場合は「あとで入力する」を押してください。</li>
+  </ol>
+  <div class="note">
+    <p><b>ホーム画面に追加しておくと、次から早く開けます。</b></p>
+    <p>iPhone：画面下の共有ボタン（□に↑）→「ホーム画面に追加」<br />
+       Android：右上のメニュー（︙）→「ホーム画面に追加」</p>
+  </div>
+
+  <h2>2. 画面の見かた</h2>
+  <table>
+    <tr><th>きょう</th><td>その日の血圧・脈拍・お薬・メモ・体重を入れます</td></tr>
+    <tr><th>きろく</th><td>平均やグラフを見かえします</td></tr>
+    <tr><th>受診</th><td>受診のときに見せるQRコードを出します</td></tr>
+    <tr><th>教材</th><td>高血圧のことと、お薬の説明が読めます</td></tr>
+    <tr><th>⚙ 設定等</th><td>画面右上。目標やお薬の回数、ロックなどを決めます</td></tr>
+  </table>
+
+  <h2>3. 毎日の記録（きょう）</h2>
+  <h3>血圧・脈拍</h3>
+  <p>朝と夜、それぞれ上の血圧・下の血圧・脈拍を入れます。朝は<b>起きて1時間以内、お薬を飲む前</b>、夜は<b>寝る前</b>が目安です。</p>
+  <p>血圧計に脈の乱れを示すマーク（機種により「不整脈」「脈の乱れ」など）が出たときは、脈拍の右にある<span class="path">不整脈マーク</span>を押してください。</p>
+  <h3>お薬</h3>
+  <p>飲めたら「飲めた」、忘れたら「飲み忘れた」を押します。表示される回数は、設定で選んだ回数（朝・昼・夕・寝る前）に合わせて変わります。</p>
+  <h3>きょうのメモ</h3>
+  <p>「かぜぎみ」「薬が変わった」などから選べます。下の欄に自由に書くこともできます。</p>
+  <p>メモは受診用QRコードには入りません。伝えたいことは、外来で画面をお見せいただくか、口頭でお伝えください。</p>
+  <h3>今月の体重</h3>
+  <p>月に1回、毎月1日を目安に測って入れてください。まだ入れていない月はオレンジ色で表示されます。身長を入れてあればBMIも出ます。</p>
+  <div class="note"><p>日付の左右にある「◀ ▶」で、前の日にさかのぼって入れられます。入れ忘れた日もあとから記録できます。</p></div>
+
+  <h2>4. 見かえす（きろく）</h2>
+  <ul>
+    <li>上のタブで <b>2週・4週・8週・12週</b> を切り替えられます</li>
+    <li><span class="path">サマリーを表示する</span>を押すと、平均血圧・目標を下回った割合・服薬の達成率・不整脈マークの回数が出ます</li>
+    <li>グラフは朝と夜が別々に出ます。青が上の血圧、オレンジが下の血圧です</li>
+    <li><b>その他</b>を開くと、服薬状況・体重の推移・はかった時刻・メモが見られます</li>
+  </ul>
+
+  <h2>5. 受診のとき（受診）</h2>
+  <ol>
+    <li>「受診」を開き、<b>前回の受診日</b>を登録します。</li>
+    <li>期間（前回から／2週間／1か月／2か月／3か月）を選びます。</li>
+    <li>QRコードが出ます。受付の端末にかざすか、診察室で画面をお見せください。</li>
+  </ol>
+  <div class="note">
+    <p>期間が長いとQRコードが2枚、3枚に分かれます。「1/3枚目」と番号が付いているので、順番に読み取ってもらってください。</p>
+    <p>QRコードに<b>お名前や生年月日は入りません</b>。手帳の番号（数字10桁）、年齢、性別、測定した数字が入ります。</p>
+  </div>
+
+  <div class="foot">作成　滋賀医科大学医学部附属病院　循環器内科</div>
+</section>
+
+<section class="sheet">
+  <h1>設定のしかた</h1>
+  <p class="sub">画面右上の <b>⚙ 設定等</b> を押すと開きます</p>
+
+  <p>設定の中は「設定」と「その他」の2つに分かれています。変更したあとは、画面のいちばん下にある<span class="path">設定を保存して記録にもどる</span>を押してください。やめたいときは<span class="path">保存せずにもどる</span>を押すと元に戻ります。</p>
+
+  <h2>あなたのこと</h2>
+  <p>生年月日・性別・身長を変えられます。生年月日を入れると和暦と年齢が下に出るので、確認にお使いください。身長を入れると体重のところにBMIが出ます。</p>
+  <p>いちばん下に「この手帳の番号」があります。はじめて開いたときに自動で決まる数字で、受診のたびに同じ方の記録だと分かるようにするために使います。お名前とは関係ありません。</p>
+
+  <h2>目標の血圧</h2>
+  <p>主治医から言われた目標を入れてください。グラフに目標の線が出て、サマリーで目標を下回った割合が出るようになります。</p>
+  <p><span class="path">標準（125/75）</span><span class="path">ゆるやか（135/85）</span>のボタンで、まとめて入れることもできます。</p>
+
+  <h2>お薬を飲む回数</h2>
+  <p>ご自分が飲んでいる回数を選びます。<span class="path">朝のみ</span><span class="path">朝夕</span><span class="path">朝昼夕</span>などのボタンで一度に選べるほか、朝・昼・夕・寝る前を個別に押しても選べます。</p>
+  <p>ここで選んだ回数だけ、「きょう」の画面にチェック欄が出ます。お薬が変わったときは、ここを直してください。</p>
+
+  <h2>データ</h2>
+  <ul>
+    <li><span class="path">デモデータを入れる</span>… 使い方を試すための見本の記録が入ります</li>
+    <li><span class="path">すべて消す</span>… 記録をすべて消します。元には戻せません</li>
+  </ul>
+
+  <h2>ロック（暗証番号・Face ID・指紋）</h2>
+  <p>他の人に見られたくないときに設定します。</p>
+  <ol>
+    <li><span class="path">暗証番号を決める</span>を押します</li>
+    <li>4桁の数字を入れます</li>
+    <li>確認のためもう一度、同じ数字を入れます</li>
+  </ol>
+  <p>設定すると、次に開いたときに暗証番号を聞かれます。<b>記録は暗号化されて保存される</b>ので、番号がなければ中身を読むことはできません。</p>
+  <p>お使いの端末がFace IDや指紋に対応していれば、<span class="path">この端末の生体認証を登録する</span>で、暗証番号を入れずに開けるようになります。便利なぶん、守りは少し弱くなります。</p>
+  <div class="warn">
+    <p><b>暗証番号を忘れると、記録を元に戻す方法はありません。</b>ご家族と共有できる番号にするか、控えを残しておいてください。</p>
+  </div>
+
+  <h2>書き出し</h2>
+  <p>記録をCSV（表計算のファイル）に保存したり、印刷したりできます。</p>
+  <ol>
+    <li><b>期間</b>を選びます（2週・4週・8週・12週・全期間・指定）</li>
+    <li><b>印刷に入れるもの</b>で、サマリー・グラフ・表を選びます</li>
+    <li><b>表に出す項目</b>で、体重や記録時刻など出したいものを選びます</li>
+    <li><span class="path">CSVで保存</span>または<span class="path">印刷プレビュー</span>を押します</li>
+  </ol>
+  <p>選んだ条件は保存されるので、次に開いたときも同じ設定で書き出せます。</p>
+
+  <h2>その他のタブ</h2>
+  <p>このアプリを使っている病院・クリニックの地図と一覧、アプリの版が見られます。</p>
+
+  <h2>困ったときは</h2>
+  <table>
+    <tr><th>記録が消えた</th><td>ブラウザの履歴やサイトデータを消すと、記録も消えます。消さないようご注意ください。</td></tr>
+    <tr><th>機種を変える</th><td>記録は引き継がれません。大切な記録は、受診時に印刷したものを保管してください。</td></tr>
+    <tr><th>QRが読めない</th><td>画面を明るくして、まっすぐ向けてください。それでも読めないときは受付にお声かけください。</td></tr>
+    <tr><th>血圧が高い</th><td>アプリは受診の目安をお伝えしますが、診断はしません。心配なときは受診してください。</td></tr>
+    <tr><th>薬を減らしたい</th><td>必ず主治医にご相談ください。自分でやめると危険です。</td></tr>
+  </table>
+
+  <div class="foot">作成　滋賀医科大学医学部附属病院　循環器内科　／　ご不明な点は外来のスタッフにお尋ねください</div>
+</section>
+
+</body>
+</html>

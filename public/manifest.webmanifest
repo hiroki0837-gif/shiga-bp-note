@@ -1,0 +1,17 @@
+{
+  "name": "しが血圧ノート",
+  "short_name": "血圧ノート",
+  "description": "家庭の血圧を記録し、受診時にQRコードで医療機関に見せられる手帳アプリです。",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F1FAFF",
+  "theme_color": "#54A9F0",
+  "lang": "ja",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

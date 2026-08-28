@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>しが血圧ノート — 掲示用QRコード</title>
+<style>
+  :root {
+    --blue:#54A9F0; --blue-deep:#1B77CB; --pale:#F1FAFF; --ice:#D9ECFB;
+    --ink:#2B3646; --sub:#46525F; --line:#D9E9F6; --good:#33A165;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:#e9eef3; font-family:"Meiryo","メイリオ",sans-serif; color:var(--ink); }
+  .bar { background:#fff; border-bottom:3px solid var(--blue); padding:14px 20px; display:flex; gap:14px; align-items:center; flex-wrap:wrap; }
+  .bar label { font-size:13px; font-weight:700; color:var(--sub); }
+  .bar input { padding:8px 10px; border:1px solid var(--line); border-radius:3px; font-size:14px; width:340px; max-width:60vw; }
+  .bar button { padding:9px 16px; border:1.5px solid var(--blue-deep); background:var(--blue-deep); color:#fff; border-radius:3px; font-size:14px; font-weight:700; cursor:pointer; }
+  .sheet { width:210mm; min-height:297mm; margin:18px auto; background:#fff; padding:18mm 16mm; page-break-after:always; }
+  h1 { font-size:30px; margin:0 0 6px; letter-spacing:.04em; }
+  .lead { font-size:15px; color:var(--sub); margin:0 0 20px; line-height:1.9; }
+  .qrbox { text-align:center; border:2px solid var(--line); border-radius:6px; padding:20px; background:var(--pale); }
+  .qrbox svg { display:block; margin:0 auto; }
+  .url { font-size:13px; color:var(--sub); word-break:break-all; margin-top:10px; }
+  .steps { display:flex; gap:12px; margin:22px 0 0; }
+  .step { flex:1; border:1px solid var(--line); border-radius:6px; padding:14px; }
+  .step b { display:block; font-size:14px; color:var(--blue-deep); margin-bottom:6px; }
+  .step p { margin:0; font-size:13.5px; line-height:1.85; }
+  .foot { margin-top:26px; padding-top:12px; border-top:1px solid var(--line); font-size:12px; color:var(--sub); line-height:1.9; }
+  .cols { display:flex; gap:18px; }
+  .cols > div { flex:1; }
+  h2 { font-size:17px; margin:22px 0 8px; border-left:5px solid var(--blue-deep); padding-left:10px; }
+  ul { margin:0 0 14px; padding-left:20px; font-size:13.5px; line-height:1.95; }
+  .big { text-align:center; }
+  .big h1 { font-size:44px; margin-bottom:10px; }
+  .big .catch { font-size:20px; color:var(--blue-deep); font-weight:700; margin:0 0 26px; }
+  .note { background:var(--pale); border-left:5px solid var(--blue-deep); padding:12px 14px; font-size:13px; line-height:1.9; border-radius:4px; }
+  @media print {
+    body { background:#fff; }
+    .bar { display:none; }
+    .sheet { margin:0; width:auto; min-height:auto; padding:14mm 12mm; }
+    @page { size:A4; margin:0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <label for="url">アプリのURL</label>
+  <input id="url" value="https://shiga-bp-note.vercel.app/" />
+  <button onclick="render()">QRコードを作り直す</button>
+  <button onclick="window.print()">印刷 / PDFで保存</button>
+</div>
+
+<!-- 1枚目：受付カウンター用 -->
+<section class="sheet big">
+  <h1>しが血圧ノート</h1>
+  <p class="catch">おうちの血圧を、かんたんに記録</p>
+  <div class="qrbox">
+    <div id="qr-big"></div>
+    <div class="url" id="url-big"></div>
+  </div>
+  <div class="steps">
+    <div class="step"><b>1. 読み取る</b><p>スマートフォンのカメラを、上のQRコードに向けてください。</p></div>
+    <div class="step"><b>2. 開く</b><p>画面に出たリンクを押すと、そのまま使えます。登録は要りません。</p></div>
+    <div class="step"><b>3. 追加する</b><p>ホーム画面に追加しておくと、次からすぐ開けます。</p></div>
+  </div>
+  <div class="note" style="margin-top:22px">
+    記録はお使いのスマートフォンの中だけに保存されます。どこかに送られることはありません。<br />
+    費用はかかりません。広告も出ません。
+  </div>
+  <div class="foot">作成　滋賀医科大学医学部附属病院　循環器内科</div>
+</section>
+
+<!-- 2枚目：リーフレット（患者さん配布用） -->
+<section class="sheet">
+  <h1>しが血圧ノート</h1>
+  <p class="lead">おうちで測った血圧を記録して、受診のときに画面をお見せいただくアプリです。<br />紙の手帳のかわりにお使いください。</p>
+
+  <div class="cols">
+    <div>
+      <h2>できること</h2>
+      <ul>
+        <li>朝と夜の血圧・脈拍を記録します</li>
+        <li>1週間の平均やグラフを自動で作ります</li>
+        <li>お薬を飲んだかどうかを残せます</li>
+        <li>受診のときはQRコードでお渡しできます</li>
+        <li>高血圧やお薬の説明が読めます</li>
+      </ul>
+      <h2>はじめかた</h2>
+      <ul>
+        <li>右のQRコードを読み取ります</li>
+        <li>生年月日・性別・身長を入れます</li>
+        <li>血圧を測ったら数字を入れるだけです</li>
+      </ul>
+    </div>
+    <div>
+      <div class="qrbox">
+        <div id="qr-small"></div>
+        <div class="url" id="url-small"></div>
+      </div>
+      <div class="note" style="margin-top:16px">
+        <b>お金はかかりません</b><br />
+        アプリストアからの入手は不要です。QRコードを読み取るだけで使えます。
+      </div>
+    </div>
+  </div>
+
+  <h2>安心してお使いいただくために</h2>
+  <ul>
+    <li>記録はお使いのスマートフォンの中だけに保存されます</li>
+    <li>お名前や生年月日が外に出ることはありません</li>
+    <li>暗証番号を決めると、記録は暗号化されて守られます</li>
+    <li>受診用のQRコードにお名前は入りません</li>
+  </ul>
+
+  <div class="note">
+    このアプリは、血圧の記録をお手伝いするものです。お薬の増減や中止は、必ず主治医の指示に従ってください。
+  </div>
+
+  <div class="foot">
+    作成　滋賀医科大学医学部附属病院　循環器内科<br />
+    ご不明な点は、外来のスタッフにお尋ねください。
+  </div>
+</section>
+
+<script>
+// Minimal QR Code encoder (numeric mode), ISO/IEC 18004.
+// Returns { size, modules } where modules is Uint8Array of size*size (1 = dark).
+
+const ECB = {
+  L: [[7,1,19,0,0],[10,1,34,0,0],[15,1,55,0,0],[20,1,80,0,0],[26,1,108,0,0],[18,2,68,0,0],[20,2,78,0,0],[24,2,97,0,0],[30,2,116,0,0],[18,2,68,2,69],[20,4,81,0,0],[24,2,92,2,93],[26,4,107,0,0],[30,3,115,1,116],[22,5,87,1,88],[24,5,98,1,99],[28,1,107,5,108],[30,5,120,1,121],[28,3,113,4,114],[28,3,107,5,108],[28,4,116,4,117],[28,2,111,7,112],[30,4,121,5,122],[30,6,117,4,118],[26,8,106,4,107],[28,10,114,2,115],[30,8,122,4,123],[30,3,117,10,118],[30,7,116,7,117],[30,5,115,10,116],[30,13,115,3,116],[30,17,115,0,0],[30,17,115,1,116],[30,13,115,6,116],[30,12,121,7,122],[30,6,121,14,122],[30,17,122,4,123],[30,4,122,18,123],[30,20,117,4,118],[30,19,118,6,119]],
+  M: [[10,1,16,0,0],[16,1,28,0,0],[26,1,44,0,0],[18,2,32,0,0],[24,2,43,0,0],[16,4,27,0,0],[18,4,31,0,0],[22,2,38,2,39],[22,3,36,2,37],[26,4,43,1,44],[30,1,50,4,51],[22,6,36,2,37],[22,8,37,1,38],[24,4,40,5,41],[24,5,41,5,42],[28,7,45,3,46],[28,10,46,1,47],[26,9,43,4,44],[26,3,44,11,45],[26,3,41,13,42],[26,17,42,0,0],[28,17,46,0,0],[28,4,47,14,48],[28,6,45,14,46],[28,8,47,13,48],[28,19,46,4,47],[28,22,45,3,46],[28,3,45,23,46],[28,21,45,7,46],[28,19,47,10,48],[28,2,46,29,47],[28,10,46,23,47],[28,14,46,21,47],[28,14,46,23,47],[28,12,47,26,48],[28,6,47,34,48],[28,29,46,14,47],[28,13,46,32,47],[28,40,47,7,48],[28,18,47,31,48]]
+};
+
+const ALIGN = ["","6,18","6,22","6,26","6,30","6,34","6,22,38","6,24,42","6,26,46","6,28,50","6,30,54","6,32,58","6,34,62","6,26,46,66","6,26,48,70","6,26,50,74","6,30,54,78","6,30,56,82","6,30,58,86","6,34,62,90","6,28,50,72,94","6,26,50,74,98","6,30,54,78,102","6,28,54,80,106","6,32,58,84,110","6,30,58,86,114","6,34,62,90,118","6,26,50,74,98,122","6,30,54,78,102,126","6,26,52,78,104,130","6,30,56,82,108,134","6,34,60,86,112,138","6,30,58,86,114,142","6,34,62,90,118,146","6,30,54,78,102,126,150","6,24,50,76,102,128,154","6,28,54,80,106,132,158","6,32,58,84,110,136,162","6,26,54,82,110,138,166","6,30,58,86,114,142,170"];
+
+const ECL_BITS = { L: 1, M: 0, Q: 3, H: 2 };
+
+// --- Galois field ---
+const EXP = new Uint8Array(512), LOG = new Uint8Array(256);
+(function () {
+  let x = 1;
+  for (let i = 0; i < 255; i++) { EXP[i] = x; LOG[x] = i; x <<= 1; if (x & 0x100) x ^= 0x11d; }
+  for (let i = 255; i < 512; i++) EXP[i] = EXP[i - 255];
+})();
+const gmul = (a, b) => (a === 0 || b === 0) ? 0 : EXP[LOG[a] + LOG[b]];
+
+function genPoly(deg) {
+  let poly = [1];
+  for (let i = 0; i < deg; i++) {
+    const next = new Array(poly.length + 1).fill(0);
+    for (let j = 0; j < poly.length; j++) {
+      next[j] ^= poly[j];
+      next[j + 1] ^= gmul(poly[j], EXP[i]);
+    }
+    poly = next;
+  }
+  return poly;
+}
+
+function rsEncode(data, ecLen) {
+  const g = genPoly(ecLen);
+  const res = new Uint8Array(ecLen);
+  for (let i = 0; i < data.length; i++) {
+    const factor = data[i] ^ res[0];
+    res.copyWithin(0, 1);
+    res[ecLen - 1] = 0;
+    if (factor !== 0) for (let j = 0; j < ecLen; j++) res[j] ^= gmul(g[j + 1], factor);
+  }
+  return res;
+}
+
+// --- helpers ---
+const cciBits = (v) => (v < 10 ? 10 : v < 27 ? 12 : 14);
+const dataCodewords = (v, ecl) => { const r = ECB[ecl][v - 1]; return r[1] * r[2] + r[3] * r[4]; };
+function numericBits(n) { return 10 * Math.floor(n / 3) + (n % 3 === 1 ? 4 : n % 3 === 2 ? 7 : 0); }
+
+function chooseVersion(nDigits, ecl, minVersion) {
+  for (let v = minVersion || 1; v <= 40; v++) {
+    const cap = dataCodewords(v, ecl) * 8 - 4 - cciBits(v);
+    if (numericBits(nDigits) <= cap) return v;
+  }
+  return null;
+}
+function numericCapacity(v, ecl) {
+  const bits = dataCodewords(v, ecl) * 8 - 4 - cciBits(v);
+  let n = Math.floor(bits / 10) * 3;
+  const rem = bits - Math.floor(bits / 10) * 10;
+  if (rem >= 7) n += 2; else if (rem >= 4) n += 1;
+  return n;
+}
+
+function cciBitsByte(v) { return v < 10 ? 8 : 16; }
+function buildCodewords(input, v, ecl, mode) {
+  const bits = [];
+  const push = (val, len) => { for (let i = len - 1; i >= 0; i--) bits.push((val >> i) & 1); };
+  if (mode === 'byte') {
+    const bytesIn = Array.from(new TextEncoder().encode(input));
+    push(4, 4);
+    push(bytesIn.length, cciBitsByte(v));
+    for (const b of bytesIn) push(b, 8);
+  } else {
+  const digits = input;
+  push(1, 4);
+  push(digits.length, cciBits(v));
+  for (let i = 0; i < digits.length; i += 3) {
+    const chunk = digits.substr(i, 3);
+    push(parseInt(chunk, 10), chunk.length === 3 ? 10 : chunk.length === 2 ? 7 : 4);
+  }
+  }
+  const totalData = dataCodewords(v, ecl);
+  const maxBits = totalData * 8;
+  for (let i = 0; i < 4 && bits.length < maxBits; i++) bits.push(0);
+  while (bits.length % 8 !== 0) bits.push(0);
+  const bytes = [];
+  for (let i = 0; i < bits.length; i += 8) {
+    let b = 0; for (let j = 0; j < 8; j++) b = (b << 1) | bits[i + j];
+    bytes.push(b);
+  }
+  const PAD = [0xec, 0x11];
+  let p = 0;
+  while (bytes.length < totalData) bytes.push(PAD[p++ % 2]);
+
+  // split into blocks
+  const [ecLen, n1, d1, n2, d2] = ECB[ecl][v - 1];
+  const blocks = [], ecBlocks = [];
+  let off = 0;
+  for (let i = 0; i < n1; i++) { const b = bytes.slice(off, off + d1); off += d1; blocks.push(b); ecBlocks.push(rsEncode(b, ecLen)); }
+  for (let i = 0; i < n2; i++) { const b = bytes.slice(off, off + d2); off += d2; blocks.push(b); ecBlocks.push(rsEncode(b, ecLen)); }
+
+  const out = [];
+  const maxLen = Math.max(d1, d2);
+  for (let i = 0; i < maxLen; i++) for (const b of blocks) if (i < b.length) out.push(b[i]);
+  for (let i = 0; i < ecLen; i++) for (const b of ecBlocks) out.push(b[i]);
+  return out;
+}
+
+function bchFormat(data) {
+  let d = data << 10;
+  for (let i = 14; i >= 10; i--) if ((d >> i) & 1) d ^= 0x537 << (i - 10);
+  return ((data << 10) | d) ^ 0x5412;
+}
+function bchVersion(v) {
+  let d = v << 12;
+  for (let i = 17; i >= 12; i--) if ((d >> i) & 1) d ^= 0x1f25 << (i - 12);
+  return (v << 12) | d;
+}
+
+const MASKS = [
+  (r, c) => (r + c) % 2 === 0,
+  (r) => r % 2 === 0,
+  (r, c) => c % 3 === 0,
+  (r, c) => (r + c) % 3 === 0,
+  (r, c) => (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0,
+  (r, c) => ((r * c) % 2) + ((r * c) % 3) === 0,
+  (r, c) => (((r * c) % 2) + ((r * c) % 3)) % 2 === 0,
+  (r, c) => (((r + c) % 2) + ((r * c) % 3)) % 2 === 0
+];
+
+function penalty(m, size) {
+  const at = (r, c) => m[r * size + c];
+  let score = 0;
+  // rule 1
+  for (let i = 0; i < size; i++) {
+    for (const dir of [0, 1]) {
+      let run = 1, prev = -1;
+      for (let j = 0; j < size; j++) {
+        const val = dir === 0 ? at(i, j) : at(j, i);
+        if (val === prev) { run++; if (run === 5) score += 3; else if (run > 5) score += 1; }
+        else { run = 1; prev = val; }
+      }
+    }
+  }
+  // rule 2
+  for (let r = 0; r < size - 1; r++) for (let c = 0; c < size - 1; c++) {
+    const v = at(r, c);
+    if (v === at(r, c + 1) && v === at(r + 1, c) && v === at(r + 1, c + 1)) score += 3;
+  }
+  // rule 3
+  const pat1 = [1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0];
+  const pat2 = [0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1];
+  for (let i = 0; i < size; i++) for (let j = 0; j <= size - 11; j++) {
+    for (const dir of [0, 1]) {
+      let ok1 = true, ok2 = true;
+      for (let k = 0; k < 11; k++) {
+        const val = dir === 0 ? at(i, j + k) : at(j + k, i);
+        if (val !== pat1[k]) ok1 = false;
+        if (val !== pat2[k]) ok2 = false;
+      }
+      if (ok1) score += 40;
+      if (ok2) score += 40;
+    }
+  }
+  // rule 4
+  let dark = 0;
+  for (let i = 0; i < size * size; i++) dark += m[i];
+  const pct = (dark * 100) / (size * size);
+  score += Math.floor(Math.abs(pct - 50) / 5) * 10;
+  return score;
+}
+
+function chooseVersionByte(nBytes, ecl, minVersion) {
+  for (let v = minVersion || 1; v <= 40; v++) {
+    const cap = dataCodewords(v, ecl) * 8 - 4 - cciBitsByte(v);
+    if (nBytes * 8 <= cap) return v;
+  }
+  return null;
+}
+function qrMatrix(digits, ecl = 'M', minVersion = 1, mode = 'numeric') {
+  if (mode !== 'byte' && !/^\d+$/.test(digits)) throw new Error('numeric only');
+  const v = mode === 'byte'
+    ? chooseVersionByte(new TextEncoder().encode(digits).length, ecl, minVersion)
+    : chooseVersion(digits.length, ecl, minVersion);
+  if (!v) throw new Error('too long');
+  const size = v * 4 + 17;
+  const mods = new Uint8Array(size * size);
+  const res = new Uint8Array(size * size);
+  const set = (r, c, val, reserve) => { mods[r * size + c] = val; if (reserve) res[r * size + c] = 1; };
+
+  const finder = (r0, c0) => {
+    for (let r = -1; r <= 7; r++) for (let c = -1; c <= 7; c++) {
+      const r1 = r0 + r, c1 = c0 + c;
+      if (r1 < 0 || c1 < 0 || r1 >= size || c1 >= size) continue;
+      const inside = r >= 0 && r <= 6 && c >= 0 && c <= 6;
+      const dark = inside && (r === 0 || r === 6 || c === 0 || c === 6 || (r >= 2 && r <= 4 && c >= 2 && c <= 4));
+      set(r1, c1, dark ? 1 : 0, true);
+    }
+  };
+  finder(0, 0); finder(0, size - 7); finder(size - 7, 0);
+
+  if (v > 1) {
+    const coords = ALIGN[v - 1].split(',').map(Number);
+    for (const r of coords) for (const c of coords) {
+      if ((r <= 8 && c <= 8) || (r <= 8 && c >= size - 9) || (r >= size - 9 && c <= 8)) continue;
+      for (let dr = -2; dr <= 2; dr++) for (let dc = -2; dc <= 2; dc++) {
+        const dark = Math.max(Math.abs(dr), Math.abs(dc)) !== 1;
+        set(r + dr, c + dc, dark ? 1 : 0, true);
+      }
+    }
+  }
+  for (let i = 8; i < size - 8; i++) { set(6, i, i % 2 === 0 ? 1 : 0, true); set(i, 6, i % 2 === 0 ? 1 : 0, true); }
+  set(size - 8, 8, 1, true);
+
+  for (let i = 0; i <= 8; i++) { if (!res[8 * size + i]) set(8, i, 0, true); if (!res[i * size + 8]) set(i, 8, 0, true); }
+  for (let i = size - 8; i < size; i++) set(8, i, 0, true);
+  for (let i = size - 7; i < size; i++) set(i, 8, 0, true);
+
+  if (v >= 7) {
+    const bits = bchVersion(v);
+    for (let i = 0; i < 18; i++) {
+      const b = (bits >> i) & 1;
+      set(Math.floor(i / 3), size - 11 + (i % 3), b, true);
+      set(size - 11 + (i % 3), Math.floor(i / 3), b, true);
+    }
+  }
+
+  // data
+  const cw = buildCodewords(digits, v, ecl, mode);
+  const bits = [];
+  for (const b of cw) for (let i = 7; i >= 0; i--) bits.push((b >> i) & 1);
+  let bi = 0, row = size - 1, dir = -1;
+  for (let col = size - 1; col > 0; col -= 2) {
+    if (col === 6) col = 5;
+    for (;;) {
+      for (let k = 0; k < 2; k++) {
+        const c = col - k;
+        if (!res[row * size + c]) { mods[row * size + c] = bi < bits.length ? bits[bi++] : 0; }
+      }
+      row += dir;
+      if (row < 0 || row >= size) { row -= dir; dir = -dir; break; }
+    }
+  }
+
+  // mask selection
+  let best = null, bestScore = Infinity;
+  for (let mk = 0; mk < 8; mk++) {
+    const test = Uint8Array.from(mods);
+    for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) {
+      if (!res[r * size + c] && MASKS[mk](r, c)) test[r * size + c] ^= 1;
+    }
+    const fmt = bchFormat((ECL_BITS[ecl] << 3) | mk);
+    applyFormat(test, size, fmt);
+    const s = penalty(test, size);
+    if (s < bestScore) { bestScore = s; best = test; }
+  }
+  return { size, modules: best, version: v };
+}
+
+function applyFormat(m, size, fmt) {
+  for (let i = 0; i < 15; i++) {
+    const b = (fmt >> i) & 1;
+    if (i < 6) m[i * size + 8] = b;
+    else if (i < 8) m[(i + 1) * size + 8] = b;
+    else if (i === 8) m[8 * size + 7] = b;
+    else m[8 * size + (14 - i)] = b;
+
+    if (i < 8) m[8 * size + (size - 1 - i)] = b;
+    else m[(size - 15 + i) * size + 8] = b;
+  }
+  m[(size - 8) * size + 8] = 1;
+}
+
+function svgFor(text, px) {
+  const m = qrMatrix(text, 'M', 1, 'byte');
+  const q = 4, size = m.size, total = size + q * 2, cell = px / total;
+  let rects = '';
+  for (let r = 0; r < size; r++) {
+    let c = 0;
+    while (c < size) {
+      if (!m.modules[r * size + c]) { c++; continue; }
+      let w = 1;
+      while (c + w < size && m.modules[r * size + c + w]) w++;
+      rects += `<rect x="${((c + q) * cell).toFixed(2)}" y="${((r + q) * cell).toFixed(2)}" width="${(w * cell).toFixed(2)}" height="${cell.toFixed(2)}"/>`;
+      c += w;
+    }
+  }
+  return `<svg width="${px}" height="${px}" viewBox="0 0 ${px} ${px}" xmlns="http://www.w3.org/2000/svg">
+    <rect width="${px}" height="${px}" fill="#fff"/><g fill="#123049">${rects}</g></svg>`;
+}
+function render() {
+  const url = document.getElementById('url').value.trim() || 'https://shiga-bp-note.vercel.app/';
+  document.getElementById('qr-big').innerHTML = svgFor(url, 300);
+  document.getElementById('qr-small').innerHTML = svgFor(url, 210);
+  document.getElementById('url-big').textContent = url;
+  document.getElementById('url-small').textContent = url;
+}
+render();
+</script>
+</body>
+</html>
