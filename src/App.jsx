@@ -49,7 +49,7 @@ const C = {
 };
 const FONT = '"Meiryo","メイリオ",sans-serif';
 const NUM = { fontVariantNumeric: "tabular-nums", fontFeatureSettings: '"tnum"' };
-const APP_VERSION = "1.1.0";
+const APP_VERSION = "1.1.1";
 
 /* ---------- 2. QRエンコーダ（数字モード・自己完結） ---------- */
 const ECB = {
@@ -953,6 +953,7 @@ function weekStats(dates, records) {
   return {
     sys: mean(all("amS", "pmS")), dia: mean(all("amD", "pmD")), hr: mean(all("amH", "pmH")),
     amS: mean(pick("amS")), amD: mean(pick("amD")), pmS: mean(pick("pmS")), pmD: mean(pick("pmD")),
+    amH: mean(pick("amH")), pmH: mean(pick("pmH")),
     days: dates.filter((d) => hasData(records[d])).length,
   };
 }
@@ -1315,8 +1316,8 @@ function WeekGrid({ dates, records, plan }) {
   const rows = [
     ["血圧 朝", (r) => bp(r, "am"), C.evening, fmtBP(st.amS, st.amD)],
     ["血圧 夜", (r) => bp(r, "pm"), C.morning, fmtBP(st.pmS, st.pmD)],
-    ["脈拍 朝", (r) => (r && r.amH ? (r.amI ? `${r.amH}*` : r.amH) : ""), C.evening, st.hr == null ? "" : String(Math.round(st.hr))],
-    ["脈拍 夜", (r) => (r && r.pmH ? (r.pmI ? `${r.pmH}*` : r.pmH) : ""), C.morning, ""],
+    ["脈拍 朝", (r) => (r && r.amH ? (r.amI ? `${r.amH}*` : r.amH) : ""), C.evening, st.amH == null ? "" : String(Math.round(st.amH))],
+    ["脈拍 夜", (r) => (r && r.pmH ? (r.pmI ? `${r.pmH}*` : r.pmH) : ""), C.morning, st.pmH == null ? "" : String(Math.round(st.pmH))],
   ];
   return (
     <div style={{ overflowX: "auto" }}>
@@ -1480,8 +1481,15 @@ function TimeCard({ weeksList, records, plan, weights, profile }) {
           borderRadius: 3, fontSize: 15, fontWeight: 800, color: C.ink, letterSpacing: "0.06em",
           display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
         }}>
-        その他
-        <span style={{ fontSize: 12, fontWeight: 700, color: C.inkSoft }}>服薬状況・体重の推移・はかった時刻・メモ ▼</span>
+        <span style={{ flexShrink: 0 }}>その他</span>
+        {/* 説明が長いので、狭い画面では折り返さず「…」で省略する */}
+        <span style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
+          <span style={{
+            fontSize: 12, fontWeight: 700, color: C.inkSoft,
+            whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+          }}>服薬状況・体重の推移・はかった時刻・メモ</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: C.inkSoft, flexShrink: 0 }}>▼</span>
+        </span>
       </button>
     );
   }
@@ -4160,18 +4168,46 @@ export default function App() {
     snap.current = null; setSettings(false); setExportPreview(null);
   };
 
+  // 新しい版の自動反映。iPhoneのホーム画面アプリは、サーバーが no-cache を返していても
+  // 古いHTMLをキャッシュから使い続けることがある。起動時と長時間離れて戻ったときに、
+  // サーバーの main-*.js の名前を自分のものと見比べて、変わっていたら読み込み直す
+  // （URLに印を付けるのはキャッシュを確実に素通りさせるため）。記録は変更のたびに
+  // 保存されているので、読み込み直しで消えるものはない
+  const updateTried = useRef(false);
+  const checkUpdate = useCallback(async () => {
+    if (updateTried.current) return;
+    try {
+      // 読み込み直しても新しくならない環境（変なキャッシュ等）でループしないよう、5分は再試行しない
+      try { if (Date.now() - (+sessionStorage.getItem("bp-update-at") || 0) < 300000) return; } catch { /* 使えない環境は続行 */ }
+      const cur = document.querySelector('script[src*="main-"]');
+      const mine = cur && (cur.src.match(/main-[\w-]+\.js/) || [])[0];
+      if (!mine) return;   // 開発サーバーでは何もしない
+      const res = await fetch(`/?probe=${Date.now()}`, { cache: "no-store" });
+      const latest = ((await res.text()).match(/main-[\w-]+\.js/) || [])[0];
+      if (latest && latest !== mine) {
+        updateTried.current = true;
+        try { sessionStorage.setItem("bp-update-at", String(Date.now())); } catch { /* 省略可 */ }
+        window.location.replace(`/?u=${Date.now()}`);
+      }
+    } catch { /* オフライン時は次の機会に */ }
+  }, []);
+  useEffect(() => { checkUpdate(); }, [checkUpdate]);
+
   // ロックは起動時だけだと不十分。ホーム画面のアプリはOSに消されるまで生きたままなので、
   // 「開き直した」つもりでも前回の画面が出て、起動時のロックチェックが走らない。
   // iOSのホーム画面アプリでは visibilitychange の発火が当てにならないため、
   // イベントに頼らないハートビート方式にする：見えている間は5秒ごとに時刻を控え、
-  // 60秒以上の空白（バックグラウンド中はタイマーが凍結されるので必ず空く）があれば掛け直す
+  // 60秒以上の空白（バックグラウンド中はタイマーが凍結されるので必ず空く）があれば
+  // ロックを掛け直し、あわせて新しい版がないかも確かめる
   useEffect(() => {
-    if (!security.enabled || locked) return undefined;
     let last = Date.now();
     const tick = () => {
       if (document.visibilityState === "hidden") return;   // 見えていない間は時刻を進めない
       const now = Date.now();
-      if (now - last > 60000) { setLocked(true); return; }
+      if (now - last > 60000) {
+        if (security.enabled && !locked) setLocked(true);
+        checkUpdate();
+      }
       last = now;
     };
     const id = setInterval(tick, 5000);
@@ -4184,7 +4220,7 @@ export default function App() {
       window.removeEventListener("focus", tick);
       window.removeEventListener("pageshow", tick);
     };
-  }, [security.enabled, locked]);
+  }, [security.enabled, locked, checkUpdate]);
 
   const rec = records[date] || emptyRec();
   const update = (r) => setRecords({ ...records, [date]: r });
