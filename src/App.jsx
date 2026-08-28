@@ -2577,6 +2577,7 @@ function ManualCard() {
       </Sec>
       <Sec title="ロック（暗証番号・Face ID・指紋）">
         <P>他の人に見られたくないときは、設定の「ロック」で4桁の暗証番号を決めます。記録は暗号化されて保存されます。</P>
+        <P>アプリを1分以上はなれてもどったときと、アプリを開き直したときに、暗証番号を求められます。</P>
         <P>端末が対応していれば、生体認証（Face ID・指紋）で開けるようにもできます。便利なぶん、守りは少し弱くなります。</P>
         <Note warn><b>暗証番号を忘れると、記録を元に戻す方法はありません。</b>ご家族と共有できる番号にするか、控えを残しておいてください。</Note>
       </Sec>
@@ -4154,6 +4155,22 @@ export default function App() {
     }
     snap.current = null; setSettings(false); setExportPreview(null);
   };
+
+  // ロックは起動時だけだと不十分。ホーム画面のアプリはOSに消されるまで生きたままなので、
+  // 「開き直した」つもりでも前回の画面が出て、起動時のロックチェックが走らない。
+  // 1分以上バックグラウンドにいたら、戻ったときに掛け直す
+  const hiddenAt = useRef(null);
+  useEffect(() => {
+    const onVis = () => {
+      if (document.visibilityState === "hidden") { hiddenAt.current = Date.now(); return; }
+      if (security.enabled && !locked && hiddenAt.current && Date.now() - hiddenAt.current > 60000) {
+        setLocked(true);
+      }
+      hiddenAt.current = null;
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, [security.enabled, locked]);
 
   const rec = records[date] || emptyRec();
   const update = (r) => setRecords({ ...records, [date]: r });
