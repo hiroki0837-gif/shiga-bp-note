@@ -2495,6 +2495,97 @@ function SetupScreen({ profile, setProfile, onDone }) {
   );
 }
 
+/* ---------- 使い方（患者向けマニュアルのアプリ内版） ---------- */
+// docs/manual-patient.html と内容を合わせてある。どちらかを直したら、もう一方も更新すること
+function ManualCard() {
+  const P = ({ children }) => <p style={{ fontSize: 13, color: C.ink, lineHeight: 1.9, margin: "0 0 8px" }}>{children}</p>;
+  const H = ({ children }) => <div style={{ fontSize: 13, fontWeight: 800, color: C.evening, margin: "12px 0 4px" }}>{children}</div>;
+  const Note = ({ children, warn }) => (
+    <div style={{ background: warn ? "#FDF6F4" : C.tint, borderLeft: `4px solid ${warn ? C.alert : C.evening}`, borderRadius: 3, padding: "8px 10px", margin: "0 0 8px" }}>
+      <div style={{ fontSize: 12.5, color: C.ink, lineHeight: 1.9 }}>{children}</div>
+    </div>
+  );
+  const Tbl = ({ rows }) => (
+    <table style={{ borderCollapse: "collapse", width: "100%", margin: "0 0 8px" }}>
+      <tbody>
+        {rows.map(([k, v]) => (
+          <tr key={k}>
+            <th style={{ border: `1px solid ${C.line}`, background: C.tint, padding: "5px 8px", fontSize: 12.5, textAlign: "left", whiteSpace: "nowrap", verticalAlign: "top" }}>{k}</th>
+            <td style={{ border: `1px solid ${C.line}`, padding: "5px 8px", fontSize: 12.5, lineHeight: 1.8, color: C.ink }}>{v}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+  const Sec = ({ title, children }) => (
+    <details style={{ borderTop: `1px solid ${C.line}` }}>
+      <summary style={{ padding: "11px 4px", fontSize: 14, fontWeight: 700, color: C.ink, cursor: "pointer" }}>{title}</summary>
+      <div style={{ padding: "2px 4px 12px" }}>{children}</div>
+    </details>
+  );
+  return (
+    <Card title="使い方" sub="項目を押すと説明が開きます">
+      <Sec title="はじめる・ホーム画面に追加">
+        <P>QRコードを読み取って開いたら、まず<b>「ホーム画面に追加」</b>してください。</P>
+        <P>iPhone：画面下の共有ボタン（□に↑）→「ホーム画面に追加」<br />
+           Android：右上のメニュー（︙）→「ホーム画面に追加」</P>
+        <Note>iPhoneでは、ブラウザとホーム画面のアプリで<b>記録の保存場所が別</b>になります。
+          必ず先にホーム画面に追加し、できたアイコンから開いて設定・記録を始めてください。</Note>
+        <P>そのあと、生年月日・性別・身長を入れて「はじめる」を押します。</P>
+      </Sec>
+      <Sec title="画面の見かた">
+        <Tbl rows={[
+          ["きょう", "その日の血圧・脈拍・お薬・メモ・体重を入れます"],
+          ["きろく", "平均やグラフを見かえします"],
+          ["受診", "受診のときに見せるQRコードを出します"],
+          ["教材", "高血圧のことと、お薬の説明が読めます"],
+          ["⚙ 設定等", "画面右上。目標やお薬の回数、ロックなどを決めます"],
+        ]} />
+      </Sec>
+      <Sec title="毎日の記録（きょう）">
+        <H>血圧・脈拍</H>
+        <P>朝と夜、それぞれ上の血圧・下の血圧・脈拍を入れます。朝は<b>起きて1時間以内、お薬を飲む前</b>、夜は<b>寝る前</b>が目安です。</P>
+        <P>血圧計に脈の乱れを示すマークが出たときは、脈拍の右にある「不整脈マーク」を押してください。</P>
+        <H>お薬</H>
+        <P>飲めたら「飲めた」、忘れたら「飲み忘れた」を押します。表示される回数は、設定で選んだ回数に合わせて変わります。</P>
+        <H>きょうのメモ</H>
+        <P>「かぜぎみ」「薬が変わった」などから選べます。自由に書くこともできます。
+           メモは受診用QRコードには入らないので、伝えたいことは外来で画面をお見せいただくか、口頭でお伝えください。</P>
+        <H>今月の体重</H>
+        <P>月に1回、毎月1日を目安に測って入れてください。身長を入れてあればBMIも出ます。</P>
+        <Note>日付の左右にある「◀ ▶」で、前の日にさかのぼって入れられます。</Note>
+      </Sec>
+      <Sec title="見かえす（きろく）">
+        <P>上のタブで 2週・4週・8週・12週 を切り替えられます。</P>
+        <P>「サマリーを表示する」を押すと、平均血圧・目標を下回った割合・服薬の達成率・不整脈マークの回数が出ます。</P>
+        <P>グラフは朝と夜が別々に出ます。青が上の血圧、オレンジが下の血圧です。</P>
+      </Sec>
+      <Sec title="受診のとき（受診）">
+        <P>「受診」を開いて前回の受診日を登録し、期間を選ぶとQRコードが出ます。受付の端末にかざすか、診察室で画面をお見せください。</P>
+        <Note>期間が長いとQRコードが2枚、3枚に分かれます。番号の順に読み取ってもらってください。
+          QRコードに<b>お名前や生年月日は入りません</b>。</Note>
+      </Sec>
+      <Sec title="ロック（暗証番号・Face ID・指紋）">
+        <P>他の人に見られたくないときは、設定の「ロック」で4桁の暗証番号を決めます。記録は暗号化されて保存されます。</P>
+        <P>端末が対応していれば、生体認証（Face ID・指紋）で開けるようにもできます。便利なぶん、守りは少し弱くなります。</P>
+        <Note warn><b>暗証番号を忘れると、記録を元に戻す方法はありません。</b>ご家族と共有できる番号にするか、控えを残しておいてください。</Note>
+      </Sec>
+      <Sec title="書き出し・印刷">
+        <P>設定の「書き出し」で、期間と項目を選んで記録をCSVに保存したり、印刷したりできます。選んだ条件は保存されます。</P>
+      </Sec>
+      <Sec title="困ったときは">
+        <Tbl rows={[
+          ["記録が消えた", "ブラウザの履歴やサイトデータを消すと、記録も消えます。消さないようご注意ください"],
+          ["機種を変える", "記録は引き継がれません。大切な記録は、受診時に印刷したものを保管してください"],
+          ["QRが読めない", "画面を明るくして、まっすぐ向けてください。読めないときは受付にお声かけください"],
+          ["血圧が高い", "アプリは受診の目安をお伝えしますが、診断はしません。心配なときは受診してください"],
+          ["薬を減らしたい", "必ず主治医にご相談ください。自分でやめると危険です"],
+        ]} />
+      </Sec>
+    </Card>
+  );
+}
+
 /* ---------- 書き出し（設定の中） ---------- */
 const medCsv = (v) => (v === 1 ? "飲めた" : v === 2 ? "飲み忘れた" : "");
 const EXPORT_COLS = [
@@ -4296,6 +4387,7 @@ export default function App() {
 
             {settingsTab === "other" && (
               <div className="flex flex-col gap-4">
+                <ManualCard />
                 <FacilityMap />
                 <Card title="アプリについて">
                   <div style={{ fontSize: 13.5, lineHeight: 2, color: C.ink, ...NUM }}>版　v{APP_VERSION}</div>
