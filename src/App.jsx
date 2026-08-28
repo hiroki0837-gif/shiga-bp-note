@@ -49,7 +49,7 @@ const C = {
 };
 const FONT = '"Meiryo","メイリオ",sans-serif';
 const NUM = { fontVariantNumeric: "tabular-nums", fontFeatureSettings: '"tnum"' };
-const APP_VERSION = "1.0.0";
+const APP_VERSION = "1.1.0";
 
 /* ---------- 2. QRエンコーダ（数字モード・自己完結） ---------- */
 const ECB = {
