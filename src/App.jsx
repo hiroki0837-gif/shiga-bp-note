@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, ReferenceLine, Legend
+  ResponsiveContainer, ReferenceLine
 } from "recharts";
 
 /* ============================================================
@@ -1758,8 +1758,23 @@ function Charts({ dates, records, targets }) {
     return out.length <= 8 ? out : undefined;
   };
   const mark = (value, color) => ({ value, fontSize: 10.5, fontWeight: 700, fill: color, position: "right", offset: 5 });
-  const head = (t) => (
-    <div style={{ fontSize: 13.5, fontWeight: 800, color: C.ink, marginBottom: 6, borderLeft: `4px solid ${C.evening}`, paddingLeft: 8 }}>{t}</div>
+  // 凡例は見出しの右に置く。rechartsのLegendはSVG下部に画面で測った高さの余白を確保するため、
+  // 印刷でSVGを拡大すると余白だけ広がりグラフと凡例が離れてしまう
+  const head = (t, items) => (
+    <div style={{
+      display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8,
+      fontSize: 13.5, fontWeight: 800, color: C.ink, marginBottom: 6,
+      borderLeft: `4px solid ${C.evening}`, paddingLeft: 8,
+    }}>
+      <span>{t}</span>
+      {items && (
+        <span style={{ fontSize: 12, fontWeight: 700, whiteSpace: "nowrap" }}>
+          {items.map(([label, color]) => (
+            <span key={label} style={{ color, marginLeft: 10 }}>━ {label}</span>
+          ))}
+        </span>
+      )}
+    </div>
   );
 
   // 朝と夕で別のグラフ。縦軸の範囲はそろえて見比べられるようにする
@@ -1769,7 +1784,7 @@ function Charts({ dates, records, targets }) {
   const DIA_COLOR = C.morning;
   const Half = ({ title, sKey, dKey }) => (
     <div className="avoid-break">
-      {head(title)}
+      {head(title, [["上", SYS_COLOR], ["下", DIA_COLOR]])}
       <div className="chart-h" style={{ height: 200 }}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 12, right: 54, bottom: 0, left: -18 }}>
@@ -1777,8 +1792,6 @@ function Charts({ dates, records, targets }) {
             <XAxis dataKey="d" tick={axis} interval="preserveStartEnd" />
             <YAxis domain={bpDomain} ticks={ticksFor(bpDomain, 20)} tick={axis} />
             <Tooltip contentStyle={{ fontSize: 12, borderRadius: 3, borderColor: C.line }} />
-            <Legend align="center" verticalAlign="bottom" iconType="plainline" iconSize={18}
-              wrapperStyle={{ fontSize: 12, paddingTop: 2, width: "100%", left: 0, textAlign: "center" }} />
             {tsys != null && (
               <ReferenceLine y={tsys} stroke={C.good} strokeDasharray="6 4" strokeWidth={1.8}
                 label={mark(`目標 ${tsys}`, C.good)} />
@@ -1799,7 +1812,7 @@ function Charts({ dates, records, targets }) {
 
   const One = ({ title, amKey, pmKey, target, height = 180, minPad = 8, step = 10 }) => (
     <div className="avoid-break">
-      {head(title)}
+      {head(title, [["朝", C.evening], ["夜", C.morning]])}
       <div className="chart-h" style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 12, right: 54, bottom: 0, left: -18 }}>
@@ -1808,8 +1821,6 @@ function Charts({ dates, records, targets }) {
             <YAxis domain={domainFor([amKey, pmKey], [target], minPad, step)}
               ticks={ticksFor(domainFor([amKey, pmKey], [target], minPad, step), step)} tick={axis} />
             <Tooltip contentStyle={{ fontSize: 12, borderRadius: 3, borderColor: C.line }} />
-            <Legend align="center" verticalAlign="bottom" iconType="plainline" iconSize={18}
-              wrapperStyle={{ fontSize: 12, paddingTop: 2, width: "100%", left: 0, textAlign: "center" }} />
             {target != null && (
               <ReferenceLine y={target} stroke={C.good} strokeDasharray="6 4" strokeWidth={1.8}
                 label={mark(`目標 ${target}`, C.good)} />
