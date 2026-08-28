@@ -39,7 +39,7 @@ const C = {
 };
 const FONT = '"Meiryo","メイリオ",sans-serif';
 const NUM = { fontVariantNumeric: "tabular-nums", fontFeatureSettings: '"tnum"' };
-const APP_VERSION = "1.0.0";
+const APP_VERSION = "1.1.0";
 
 /* ---------- 日付 ---------- */
 const WD = ["日", "月", "火", "水", "木", "金", "土"];
@@ -1412,6 +1412,8 @@ export default function App() {
   const [pinErr, setPinErr] = useState("");
   const [csvMsg, setCsvMsg] = useState("");
   const [recent, setRecent] = useState([]);        // 直近の読み取り（端末のメモリ内のみ）
+  // カメラ運用では、開始ボタンを押すまでカメラを動かさない（読み取り機運用は常時待ち受け）
+  const [scanning, setScanning] = useState(false);
   const confSnap = useRef(null);
   const [job, setJob] = useState(null);            // いま印刷する内容
   const inputRef = useRef(null);
@@ -1424,7 +1426,7 @@ export default function App() {
   useEffect(() => { if (screen !== "settings") confStore.save(conf); }, [conf, screen]);
 
   const reset = useCallback(() => {
-    setChunks({}); setMeta(null); setErr(""); setPhase("wait");
+    setChunks({}); setMeta(null); setErr(""); setPhase("wait"); setScanning(false);
     if (inputRef.current) inputRef.current.value = "";
   }, []);
   const touch = useCallback(() => {
@@ -1459,16 +1461,23 @@ export default function App() {
     const entry = { at: new Date(), meta, records: merged, dates };
     setJob(entry);
     setRecent((prev) => [entry, ...prev].slice(0, 5));
+  }, [meta, got, phase, merged, dates]);
+
+  // 「印刷しています…」を一拍見せてから、CSV・印刷を実行して完了画面へ。
+  // phaseを変える処理と同じeffectにタイマーを置くと、phase変更で走るクリーンアップに
+  // タイマー自身が消されて、完了画面に進まなくなる
+  useEffect(() => {
+    if (phase !== "ready" || !job) return;
     const t = setTimeout(async () => {
       if (conf.csv) {
-        const e = await appendCsv(meta, merged, dates, conf.name);
+        const e = await appendCsv(job.meta, job.records, job.dates, conf.name);
         setCsvMsg(e || (dirRef.handle ? "CSVに追記しました" : "CSVを保存しました"));
       }
       if (conf.print && conf.auto) { try { window.print(); } catch { /* 手動で印刷 */ } }
       setPhase("printed");
     }, 700);
     return () => clearTimeout(t);
-  }, [meta, got, phase, conf, merged, dates]);
+  }, [phase, job, conf]);
 
   useEffect(() => {
     if (phase !== "printed") return;
@@ -1555,6 +1564,35 @@ export default function App() {
             <div style={{ ...big, textAlign: "center" }}>印刷しています…</div>
             <p style={{ fontSize: 15, color: C.inkSoft, textAlign: "center", marginTop: 10 }}>{meta && meta.appName}</p>
           </Card>
+        ) : conf.reader === "camera" && !scanning ? (
+          <>
+            <Card style={{ borderLeft: `6px solid ${C.evening}` }}>
+              <div style={{ ...big, textAlign: "center" }}>受診用QRコードの<br />読み取り</div>
+              <p style={{ fontSize: 15, color: C.inkSoft, textAlign: "center", marginTop: 14, lineHeight: 1.8 }}>
+                ボタンを押すとカメラが動き、読み取り画面になります
+              </p>
+              <div style={{ textAlign: "center", marginTop: 22 }}>
+                <button onClick={() => { setScanning(true); touch(); }}
+                  style={{
+                    padding: "20px 30px", borderRadius: 6, border: "none", cursor: "pointer",
+                    background: C.evening, color: "#fff", fontSize: 21, fontWeight: 800,
+                    letterSpacing: "0.04em",
+                  }}>
+                  受診用QRコードの読み取りを始める
+                </button>
+              </div>
+            </Card>
+
+            <div className="no-print" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginTop: 28 }}>
+              <span style={{ fontSize: 11.5, color: C.inkSoft, ...NUM }}>受付端末 v{APP_VERSION}</span>
+              <button onClick={() => { setPinErr(""); confSnap.current = conf; setScreen(conf.hash ? "pin" : "settings"); }}
+                title="設定"
+                style={{
+                  border: `1px solid ${C.line}`, background: "#fff", color: C.inkSoft,
+                  borderRadius: 3, width: 30, height: 26, cursor: "pointer", fontSize: 13, lineHeight: 1,
+                }}>⚙</button>
+            </div>
+          </>
         ) : (
           <>
             <Card style={{ borderLeft: `6px solid ${C.evening}` }}>
@@ -1585,7 +1623,7 @@ export default function App() {
 
             {conf.reader === "camera" ? (
               <div style={{ marginTop: 16 }}>
-                <CameraScanner onCode={accept} onClose={() => {}} />
+                <CameraScanner onCode={accept} onClose={() => setScanning(false)} />
               </div>
             ) : (
               <div style={{ marginTop: 20, textAlign: "center" }}>

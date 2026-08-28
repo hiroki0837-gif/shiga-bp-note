@@ -3877,16 +3877,21 @@ function KioskView({ onExit }) {
   const st = useMemo(() => (meta ? weekStats(dates, merged) : null), [dates, merged, meta]);
   const got = Object.keys(chunks).length;
 
-  // そろったら自動で印刷し、少し待って最初の画面に戻す
+  // そろったら自動で印刷し、少し待って最初の画面に戻す。
+  // phaseを変える処理とタイマーを同じeffectに置くと、phase変更のクリーンアップで
+  // タイマー自身が消されて完了画面に進まないため、effectを分ける
   useEffect(() => {
     if (!meta || got < meta.total || phase !== "wait") return;
     setPhase("ready");
+  }, [meta, got, phase]);
+  useEffect(() => {
+    if (phase !== "ready") return;
     const t1 = setTimeout(() => {
       try { window.print(); } catch { /* 印刷できない環境は手動で */ }
       setPhase("printed");
     }, 700);
     return () => clearTimeout(t1);
-  }, [meta, got, phase]);
+  }, [phase]);
 
   useEffect(() => {
     if (phase !== "printed") return;
