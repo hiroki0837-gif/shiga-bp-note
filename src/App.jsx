@@ -1089,7 +1089,17 @@ function TodayView({ date, setDate, rec, update, targets, plan, weights, setWeig
             width: 42, height: 38, border: `1px solid ${C.line}`, borderRadius: 3,
             background: "#fff", cursor: "pointer", position: "relative",
           }} title="日付を選ぶ">
-            <span style={{ fontSize: 18, lineHeight: 1 }}>📅</span>
+            {/* 絵文字はOSごとに見た目が変わるため、配色を合わせた線画アイコンにする */}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="3" y="4.5" width="18" height="16.5" rx="3" stroke={C.evening} strokeWidth="1.8" />
+              <path d="M3 9.5H21" stroke={C.evening} strokeWidth="1.8" />
+              <path d="M8 2.8V6.2M16 2.8V6.2" stroke={C.evening} strokeWidth="1.8" strokeLinecap="round" />
+              <circle cx="8" cy="13.5" r="1.3" fill={C.evening} />
+              <circle cx="12" cy="13.5" r="1.3" fill={C.evening} />
+              <circle cx="16" cy="13.5" r="1.3" fill={C.evening} />
+              <circle cx="8" cy="17.5" r="1.3" fill={C.evening} />
+              <circle cx="12" cy="17.5" r="1.3" fill={C.evening} />
+            </svg>
             <input type="date" value={date} max={todayISO()}
               onChange={(e) => e.target.value && setDate(e.target.value)}
               style={{ position: "absolute", inset: 0, opacity: 0, width: "100%", height: "100%", cursor: "pointer" }} />
