@@ -4158,18 +4158,28 @@ export default function App() {
 
   // ロックは起動時だけだと不十分。ホーム画面のアプリはOSに消されるまで生きたままなので、
   // 「開き直した」つもりでも前回の画面が出て、起動時のロックチェックが走らない。
-  // 1分以上バックグラウンドにいたら、戻ったときに掛け直す
-  const hiddenAt = useRef(null);
+  // iOSのホーム画面アプリでは visibilitychange の発火が当てにならないため、
+  // イベントに頼らないハートビート方式にする：見えている間は5秒ごとに時刻を控え、
+  // 60秒以上の空白（バックグラウンド中はタイマーが凍結されるので必ず空く）があれば掛け直す
   useEffect(() => {
-    const onVis = () => {
-      if (document.visibilityState === "hidden") { hiddenAt.current = Date.now(); return; }
-      if (security.enabled && !locked && hiddenAt.current && Date.now() - hiddenAt.current > 60000) {
-        setLocked(true);
-      }
-      hiddenAt.current = null;
+    if (!security.enabled || locked) return undefined;
+    let last = Date.now();
+    const tick = () => {
+      if (document.visibilityState === "hidden") return;   // 見えていない間は時刻を進めない
+      const now = Date.now();
+      if (now - last > 60000) { setLocked(true); return; }
+      last = now;
     };
-    document.addEventListener("visibilitychange", onVis);
-    return () => document.removeEventListener("visibilitychange", onVis);
+    const id = setInterval(tick, 5000);
+    document.addEventListener("visibilitychange", tick);
+    window.addEventListener("focus", tick);
+    window.addEventListener("pageshow", tick);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", tick);
+      window.removeEventListener("focus", tick);
+      window.removeEventListener("pageshow", tick);
+    };
   }, [security.enabled, locked]);
 
   const rec = records[date] || emptyRec();
