@@ -2438,7 +2438,23 @@ function ProfileFields({ profile, setProfile }) {
   );
 }
 
+// iPhoneはブラウザ（Safari）とホーム画面に追加したアプリで保存領域が別。
+// ブラウザのまま設定・記録すると、あとでホーム画面版を開いたときに引き継がれない。
+// Androidは共有されるので案内は不要
+const isIOS = () => {
+  try {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent)
+      || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  } catch { return false; }
+};
+const isStandalone = () => {
+  try {
+    return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  } catch { return false; }
+};
+
 function SetupScreen({ profile, setProfile, onDone }) {
+  const showHomeHint = isIOS() && !isStandalone();
   return (
     <div style={{ maxWidth: 520, margin: "0 auto", padding: "36px 16px 60px" }}>
       <div style={{ textAlign: "center", marginBottom: 24 }}>
@@ -2447,6 +2463,22 @@ function SetupScreen({ profile, setProfile, onDone }) {
           はじめに、あなたのことを教えてください
         </div>
       </div>
+
+      {showHomeHint && (
+        <Card style={{ borderColor: C.morning, borderLeft: `5px solid ${C.morning}`, marginBottom: 14 }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: C.ink, marginBottom: 8 }}>
+            さきに「ホーム画面に追加」してください
+          </div>
+          <p style={{ fontSize: 13, color: C.ink, lineHeight: 1.9, margin: 0 }}>
+            iPhoneでは、ブラウザとホーム画面に追加したアプリで<b>記録の保存場所が別</b>になります。
+            このまま入力すると、あとでホーム画面から開いたときに<b>最初からやり直し</b>になります。
+          </p>
+          <p style={{ fontSize: 13, color: C.inkSoft, lineHeight: 1.9, margin: "8px 0 0" }}>
+            画面下の<b>共有ボタン（□に↑）</b>から<b>「ホーム画面に追加」</b>を選び、
+            ホーム画面にできたアイコンから開き直して設定してください。
+          </p>
+        </Card>
+      )}
 
       <Card>
         <ProfileFields profile={profile} setProfile={setProfile} />
