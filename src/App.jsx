@@ -1776,7 +1776,7 @@ function Charts({ dates, records, targets }) {
   // LegendはSVG下部に画面で測った高さの余白を確保するため、印刷でSVGを拡大すると
   // 余白だけ広がりグラフと凡例が離れてしまう（HTMLなら倍率の影響を受けない）
   const legend = (items) => (
-    <div style={{ textAlign: "center", fontSize: 12, fontWeight: 700, marginTop: 2 }}>
+    <div style={{ textAlign: "center", fontSize: 12, fontWeight: 700, marginTop: 0 }}>
       {items.map(([label, color]) => (
         <span key={label} style={{ color, margin: "0 9px" }}>━ {label}</span>
       ))}
@@ -1795,7 +1795,8 @@ function Charts({ dates, records, targets }) {
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 12, right: 54, bottom: 0, left: -18 }}>
             <CartesianGrid stroke={C.line} strokeDasharray="2 4" />
-            <XAxis dataKey="d" tick={axis} interval="preserveStartEnd" />
+            {/* height既定30だとラベル下に余白が残り、印刷で拡大されると凡例が離れて見える */}
+            <XAxis dataKey="d" tick={axis} interval="preserveStartEnd" height={24} />
             <YAxis domain={bpDomain} ticks={ticksFor(bpDomain, 20)} tick={axis} />
             <Tooltip contentStyle={{ fontSize: 12, borderRadius: 3, borderColor: C.line }} />
             {tsys != null && (
@@ -1824,7 +1825,8 @@ function Charts({ dates, records, targets }) {
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 12, right: 54, bottom: 0, left: -18 }}>
             <CartesianGrid stroke={C.line} strokeDasharray="2 4" />
-            <XAxis dataKey="d" tick={axis} interval="preserveStartEnd" />
+            {/* height既定30だとラベル下に余白が残り、印刷で拡大されると凡例が離れて見える */}
+            <XAxis dataKey="d" tick={axis} interval="preserveStartEnd" height={24} />
             <YAxis domain={domainFor([amKey, pmKey], [target], minPad, step)}
               ticks={ticksFor(domainFor([amKey, pmKey], [target], minPad, step), step)} tick={axis} />
             <Tooltip contentStyle={{ fontSize: 12, borderRadius: 3, borderColor: C.line }} />
