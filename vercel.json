@@ -11,12 +11,20 @@
       ]
     },
     {
+      "source": "/",
+      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+    },
+    {
       "source": "/index.html",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
     },
     {
       "source": "/terminal.html",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+    },
+    {
+      "source": "/heart-failure.html",
+      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
     }
   ]
 }
