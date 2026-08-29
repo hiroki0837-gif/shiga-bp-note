@@ -49,7 +49,7 @@ const C = {
 };
 const FONT = '"Meiryo","メイリオ",sans-serif';
 const NUM = { fontVariantNumeric: "tabular-nums", fontFeatureSettings: '"tnum"' };
-const APP_VERSION = "1.2.5";
+const APP_VERSION = "1.2.6";
 
 /* 画面の見た目（背景色・書体）。書体は端末に入っているものだけを使う（通信しない方針）。
    背景色は、枠線（line）・薄い塗り（tint/tintDeep）も同系色でひとそろいにする */
@@ -927,8 +927,10 @@ const bmiOf = (w, height) => {
 };
 const bmiLabel = (v) => (v == null ? "" : v < 18.5 ? "やせ" : v < 25 ? "ふつう" : v < 30 ? "肥満(1度)" : "肥満(2度以上)");
 
-function MonthlyWeightCard({ weights, setWeights, profile }) {
-  const ym = ymOf(todayISO());
+// 選んだ日付の月の体重を出す（きょう以外の日付・過去の月でも消えないように）
+function MonthlyWeightCard({ date, weights, setWeights, profile }) {
+  const ym = ymOf(date);
+  const thisMonth = ym === ymOf(todayISO());
   const prevYm = ymOf(addDays(`${ym}-01`, -1));
   const v = weights[ym] || "";
   const bmi = bmiOf(v, profile.height);
@@ -938,13 +940,18 @@ function MonthlyWeightCard({ weights, setWeights, profile }) {
   const notYet = !v;
 
   return (
-    <Card title="今月の体重" sub={`${ymLabel(ym)}・毎月1日にはかりましょう`}
-      style={notYet ? { borderColor: C.morning, borderLeft: `5px solid ${C.morning}` } : undefined}>
-      {notYet && (
+    <Card title={thisMonth ? "今月の体重" : "この月の体重"} sub={`${ymLabel(ym)}・毎月1日にはかりましょう`}
+      style={notYet && thisMonth ? { borderColor: C.morning, borderLeft: `5px solid ${C.morning}` } : undefined}>
+      {notYet && thisMonth && (
         <p style={{ fontSize: 13.5, fontWeight: 700, color: C.morning, margin: "0 0 12px", lineHeight: 1.8 }}>
           {day === 1
             ? "きょうは1日です。体重をはかって入れてください。"
             : `今月はまだ記録がありません。はかったときに入れてください。`}
+        </p>
+      )}
+      {notYet && !thisMonth && (
+        <p style={{ fontSize: 13, color: C.inkSoft, margin: "0 0 12px", lineHeight: 1.8 }}>
+          この月の記録はありません。おぼえていれば、あとからでも入れられます。
         </p>
       )}
       <div className="flex items-center gap-3 flex-wrap">
@@ -1235,7 +1242,7 @@ function TodayView({ date, setDate, rec, update, targets, plan, weights, setWeig
         </p>
       </Card>
 
-      {date === todayISO() && <MonthlyWeightCard weights={weights} setWeights={setWeights} profile={profile} />}
+      <MonthlyWeightCard date={date} weights={weights} setWeights={setWeights} profile={profile} />
     </div>
   );
 }
