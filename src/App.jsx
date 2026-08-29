@@ -49,7 +49,7 @@ const C = {
 };
 const FONT = '"Meiryo","メイリオ",sans-serif';
 const NUM = { fontVariantNumeric: "tabular-nums", fontFeatureSettings: '"tnum"' };
-const APP_VERSION = "1.2.3";
+const APP_VERSION = "1.2.4";
 
 /* 画面の見た目（背景色・書体）。書体は端末に入っているものだけを使う（通信しない方針）。
    背景色は、枠線（line）・薄い塗り（tint/tintDeep）も同系色でひとそろいにする */
@@ -1505,15 +1505,15 @@ function TimeCard({ weeksList, records, plan, weights, profile }) {
           borderRadius: 3, fontSize: 15, fontWeight: 800, color: C.ink, letterSpacing: "0.06em",
           display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
         }}>
-        <span style={{ flexShrink: 0 }}>その他</span>
-        {/* 説明が長いので、狭い画面では折り返さず「…」で省略する */}
-        <span style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
+        {/* 説明が長いので、切らずにタイトルの下へ折り返して全部見せる */}
+        <span style={{ minWidth: 0 }}>
+          その他
           <span style={{
-            fontSize: 12, fontWeight: 700, color: C.inkSoft,
-            whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+            display: "block", fontSize: 11.5, fontWeight: 700, color: C.inkSoft,
+            marginTop: 3, lineHeight: 1.6, whiteSpace: "normal", letterSpacing: 0,
           }}>服薬状況・体重の推移・はかった時刻・メモ</span>
-          <span style={{ fontSize: 12, fontWeight: 700, color: C.inkSoft, flexShrink: 0 }}>▼</span>
         </span>
+        <span style={{ fontSize: 12, fontWeight: 700, color: C.inkSoft, flexShrink: 0 }}>▼</span>
       </button>
     );
   }
