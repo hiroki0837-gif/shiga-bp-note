@@ -49,7 +49,7 @@ const C = {
 };
 const FONT = '"Meiryo","メイリオ",sans-serif';
 const NUM = { fontVariantNumeric: "tabular-nums", fontFeatureSettings: '"tnum"' };
-const APP_VERSION = "1.2.4";
+const APP_VERSION = "1.2.5";
 
 /* 画面の見た目（背景色・書体）。書体は端末に入っているものだけを使う（通信しない方針）。
    背景色は、枠線（line）・薄い塗り（tint/tintDeep）も同系色でひとそろいにする */
@@ -1521,11 +1521,12 @@ function TimeCard({ weeksList, records, plan, weights, profile }) {
   const seg = (k, l) => (
     <button key={k} onClick={() => setView(k)}
       style={{
-        // 狭い画面で「服薬状況」「はかった時刻」が切れないよう、折り返しを許して詰める
-        flex: 1, padding: "9px 2px", border: "none", cursor: "pointer",
+        // 4等分だと狭い画面で「はかった時刻」が入らない。文字数に応じた幅にして
+        // 余りを分け合えば、どの見出しも1行で収まる
+        flex: "1 1 auto", padding: "9px 4px", border: "none", cursor: "pointer",
         borderLeft: k === "med" ? "none" : `1px solid ${C.line}`,
         background: view === k ? C.ink : "#fff", color: view === k ? "#fff" : C.inkSoft,
-        fontSize: 13, fontWeight: 700, lineHeight: 1.35, whiteSpace: "normal",
+        fontSize: 13, fontWeight: 700, whiteSpace: "nowrap",
       }}>{l}</button>
   );
 
