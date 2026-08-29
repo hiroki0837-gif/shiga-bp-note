@@ -49,7 +49,7 @@ const C = {
 };
 const FONT = '"Meiryo","メイリオ",sans-serif';
 const NUM = { fontVariantNumeric: "tabular-nums", fontFeatureSettings: '"tnum"' };
-const APP_VERSION = "1.2.1";
+const APP_VERSION = "1.2.2";
 
 /* 画面の見た目（背景色・書体）。書体は端末に入っているものだけを使う（通信しない方針）。
    背景色は、枠線（line）・薄い塗り（tint/tintDeep）も同系色でひとそろいにする */
@@ -62,10 +62,9 @@ const BG_CHOICES = [
   ["cream", "クリーム", "#FBF7ED", "#EAE0C8", "#FBF7ED", "#F3EAD2"],
 ];
 const FONT_CHOICES = [
-  ["gothic", "ゴシック（標準）", '"Meiryo","メイリオ","Hiragino Kaku Gothic ProN",sans-serif'],
+  ["gothic", "メイリオ（標準）", '"Meiryo","メイリオ","Hiragino Kaku Gothic ProN",sans-serif'],
+  ["kaku", "ゴシック", '"Yu Gothic UI","YuGothic","Yu Gothic","Hiragino Kaku Gothic ProN","MS PGothic",sans-serif'],
   ["maru", "丸ゴシック", '"Hiragino Maru Gothic ProN","HGMaruGothicMPRO","HG丸ｺﾞｼｯｸM-PRO","Yu Gothic UI","Meiryo",sans-serif'],
-  ["kaisho", "楷書体", '"HG正楷書体-PRO","HGSeikaishotaiPRO","AR楷書体M","DFKai-SB","Kaiti SC","STKaiti","Hiragino Mincho ProN",serif'],
-  ["pop", "ポップ体", '"HGP創英角ﾎﾟｯﾌﾟ体","HG創英角ﾎﾟｯﾌﾟ体","HGSoeiKakupoptai","Chalkboard SE","Comic Sans MS","Meiryo",cursive'],
   ["mincho", "明朝", '"Hiragino Mincho ProN","Yu Mincho","游明朝","MS PMincho",serif'],
 ];
 const emptyTheme = () => ({ bg: "sky", font: "gothic" });
