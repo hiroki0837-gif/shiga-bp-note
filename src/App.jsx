@@ -49,25 +49,31 @@ const C = {
 };
 const FONT = '"Meiryo","メイリオ",sans-serif';
 const NUM = { fontVariantNumeric: "tabular-nums", fontFeatureSettings: '"tnum"' };
-const APP_VERSION = "1.2.0";
+const APP_VERSION = "1.2.1";
 
-/* 画面の見た目（背景色・書体）。書体は端末に入っているものだけを使う（通信しない方針） */
+/* 画面の見た目（背景色・書体）。書体は端末に入っているものだけを使う（通信しない方針）。
+   背景色は、枠線（line）・薄い塗り（tint/tintDeep）も同系色でひとそろいにする */
 const BG_CHOICES = [
-  ["sky", "水色", "#F1FAFF"],
-  ["sakura", "ピンク", "#FDF3F6"],
-  ["lavender", "うす紫", "#F6F3FB"],
-  ["mint", "うす緑", "#F1FAF3"],
-  ["cream", "クリーム", "#FBF7ED"],
+  // [key, 表示名, 背景, 枠線, 薄い塗り, 濃いめの塗り]
+  ["sky", "水色", "#F1FAFF", "#D9E9F6", "#F1FAFF", "#D9ECFB"],
+  ["sakura", "ピンク", "#FDF3F6", "#F0D6E0", "#FDF3F6", "#F8DCE7"],
+  ["lavender", "うす紫", "#F6F3FB", "#E0D8EF", "#F6F3FB", "#E9DFF6"],
+  ["mint", "うす緑", "#F1FAF3", "#D4EBDC", "#F1FAF3", "#DDF0E4"],
+  ["cream", "クリーム", "#FBF7ED", "#EAE0C8", "#FBF7ED", "#F3EAD2"],
 ];
 const FONT_CHOICES = [
   ["gothic", "ゴシック（標準）", '"Meiryo","メイリオ","Hiragino Kaku Gothic ProN",sans-serif'],
   ["maru", "丸ゴシック", '"Hiragino Maru Gothic ProN","HGMaruGothicMPRO","HG丸ｺﾞｼｯｸM-PRO","Yu Gothic UI","Meiryo",sans-serif'],
-  ["ud", "UDゴシック", '"BIZ UDPGothic","BIZ UDGothic","Meiryo",sans-serif'],
-  ["yu", "游ゴシック", '"Yu Gothic Medium","Yu Gothic","YuGothic","游ゴシック体","Meiryo",sans-serif'],
+  ["kaisho", "楷書体", '"HG正楷書体-PRO","HGSeikaishotaiPRO","AR楷書体M","DFKai-SB","Kaiti SC","STKaiti","Hiragino Mincho ProN",serif'],
+  ["pop", "ポップ体", '"HGP創英角ﾎﾟｯﾌﾟ体","HG創英角ﾎﾟｯﾌﾟ体","HGSoeiKakupoptai","Chalkboard SE","Comic Sans MS","Meiryo",cursive'],
   ["mincho", "明朝", '"Hiragino Mincho ProN","Yu Mincho","游明朝","MS PMincho",serif'],
 ];
 const emptyTheme = () => ({ bg: "sky", font: "gothic" });
-const themeBg = (t) => (BG_CHOICES.find(([k]) => k === (t && t.bg)) || BG_CHOICES[0])[2];
+const themePalette = (t) => {
+  const [, , paper, line, tint, tintDeep] = BG_CHOICES.find(([k]) => k === (t && t.bg)) || BG_CHOICES[0];
+  return { paper, line, tint, tintDeep };
+};
+const themeBg = (t) => themePalette(t).paper;
 const themeFont = (t) => (FONT_CHOICES.find(([k]) => k === (t && t.font)) || FONT_CHOICES[0])[2];
 
 /* ---------- 2. QRエンコーダ（数字モード・自己完結） ---------- */
@@ -4395,6 +4401,13 @@ export default function App() {
       return true;
     } catch { return false; }
   };
+
+  // 選ばれた背景色に合わせて、枠線・薄い塗り（C.line / C.tint / C.tintDeep）も同系色に切り替える。
+  // C はモジュール定数だが、インラインstyleが描画時に参照するので、描画のたびにここで上書きすれば全体に効く
+  {
+    const pal = themePalette(theme);
+    C.paper = pal.paper; C.line = pal.line; C.tint = pal.tint; C.tintDeep = pal.tintDeep;
+  }
 
   if (loaded && locked) {
     return (
