@@ -49,7 +49,7 @@ const C = {
 };
 const FONT = '"Meiryo","メイリオ",sans-serif';
 const NUM = { fontVariantNumeric: "tabular-nums", fontFeatureSettings: '"tnum"' };
-const APP_VERSION = "1.2.6";
+const APP_VERSION = "1.2.7";
 
 /* 画面の見た目（背景色・書体）。書体は端末に入っているものだけを使う（通信しない方針）。
    背景色は、枠線（line）・薄い塗り（tint/tintDeep）も同系色でひとそろいにする */
@@ -2547,33 +2547,35 @@ function SetupScreen({ profile, setProfile, onDone }) {
 }
 
 /* ---------- 使い方（患者向けマニュアルのアプリ内版） ---------- */
-// docs/manual-patient.html と内容を合わせてある。どちらかを直したら、もう一方も更新すること
+// docs/manual-patient.html と内容を合わせてある。どちらかを直したら、もう一方も更新すること。
+// 部品をManualCardの中で定義すると、再レンダーのたびに型が変わって<details>の開閉が
+// リセットされるため、モジュール直下に置く
+const P = ({ children }) => <p style={{ fontSize: 13, color: C.ink, lineHeight: 1.9, margin: "0 0 8px" }}>{children}</p>;
+const H = ({ children }) => <div style={{ fontSize: 13, fontWeight: 800, color: C.evening, margin: "12px 0 4px" }}>{children}</div>;
+const Note = ({ children, warn }) => (
+  <div style={{ background: warn ? "#FDF6F4" : C.tint, borderLeft: `4px solid ${warn ? C.alert : C.evening}`, borderRadius: 3, padding: "8px 10px", margin: "0 0 8px" }}>
+    <div style={{ fontSize: 12.5, color: C.ink, lineHeight: 1.9 }}>{children}</div>
+  </div>
+);
+const Tbl = ({ rows }) => (
+  <table style={{ borderCollapse: "collapse", width: "100%", margin: "0 0 8px" }}>
+    <tbody>
+      {rows.map(([k, v]) => (
+        <tr key={k}>
+          <th style={{ border: `1px solid ${C.line}`, background: C.tint, padding: "5px 8px", fontSize: 12.5, textAlign: "left", whiteSpace: "nowrap", verticalAlign: "top" }}>{k}</th>
+          <td style={{ border: `1px solid ${C.line}`, padding: "5px 8px", fontSize: 12.5, lineHeight: 1.8, color: C.ink }}>{v}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+);
+const Sec = ({ title, children }) => (
+  <details style={{ borderTop: `1px solid ${C.line}` }}>
+    <summary style={{ padding: "11px 4px", fontSize: 14, fontWeight: 700, color: C.ink, cursor: "pointer" }}>{title}</summary>
+    <div style={{ padding: "2px 4px 12px" }}>{children}</div>
+  </details>
+);
 function ManualCard() {
-  const P = ({ children }) => <p style={{ fontSize: 13, color: C.ink, lineHeight: 1.9, margin: "0 0 8px" }}>{children}</p>;
-  const H = ({ children }) => <div style={{ fontSize: 13, fontWeight: 800, color: C.evening, margin: "12px 0 4px" }}>{children}</div>;
-  const Note = ({ children, warn }) => (
-    <div style={{ background: warn ? "#FDF6F4" : C.tint, borderLeft: `4px solid ${warn ? C.alert : C.evening}`, borderRadius: 3, padding: "8px 10px", margin: "0 0 8px" }}>
-      <div style={{ fontSize: 12.5, color: C.ink, lineHeight: 1.9 }}>{children}</div>
-    </div>
-  );
-  const Tbl = ({ rows }) => (
-    <table style={{ borderCollapse: "collapse", width: "100%", margin: "0 0 8px" }}>
-      <tbody>
-        {rows.map(([k, v]) => (
-          <tr key={k}>
-            <th style={{ border: `1px solid ${C.line}`, background: C.tint, padding: "5px 8px", fontSize: 12.5, textAlign: "left", whiteSpace: "nowrap", verticalAlign: "top" }}>{k}</th>
-            <td style={{ border: `1px solid ${C.line}`, padding: "5px 8px", fontSize: 12.5, lineHeight: 1.8, color: C.ink }}>{v}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-  const Sec = ({ title, children }) => (
-    <details style={{ borderTop: `1px solid ${C.line}` }}>
-      <summary style={{ padding: "11px 4px", fontSize: 14, fontWeight: 700, color: C.ink, cursor: "pointer" }}>{title}</summary>
-      <div style={{ padding: "2px 4px 12px" }}>{children}</div>
-    </details>
-  );
   return (
     <Card title="使い方" sub="項目を押すと説明が開きます">
       <Sec title="はじめる・ホーム画面に追加">
@@ -2621,6 +2623,9 @@ function ManualCard() {
         <P>アプリを1分以上はなれてもどったときと、アプリを開き直したときに、暗証番号を求められます。</P>
         <P>端末が対応していれば、生体認証（Face ID・指紋）で開けるようにもできます。便利なぶん、守りは少し弱くなります。</P>
         <Note warn><b>暗証番号を忘れると、記録を元に戻す方法はありません。</b>ご家族と共有できる番号にするか、控えを残しておいてください。</Note>
+      </Sec>
+      <Sec title="画面の見た目">
+        <P>設定の「画面の見た目」で、背景の色（水色・ピンク・うす紫・うす緑・クリーム）と文字の書体（3種類）を選べます。</P>
       </Sec>
       <Sec title="書き出し・印刷">
         <P>設定の「書き出し」で、期間と項目を選んで記録をCSVに保存したり、印刷したりできます。選んだ条件は保存されます。</P>
@@ -2843,7 +2848,11 @@ function ExportWeekTables({ dates, records, plan, cols, weights }) {
   return (
     <div className="flex flex-col gap-5">
       {weeks.map((w, i) => {
-        const st = weekStats(w, records);
+        // 選択期間の外側の日は、表示にも週平均にも入れない（CSVやサマリーと数字を揃える）
+        const last = dates[dates.length - 1];
+        const inR = (d) => d >= dates[0] && d <= last;
+        const wIn = w.filter(inR);
+        const st = weekStats(wIn, records);
         const rows = [];
         if (cols.amBP) rows.push(["血圧 朝", (r) => bpv(r, "am"), C.evening, fmtBP(st.amS, st.amD)]);
         if (cols.pmBP) rows.push(["血圧 夜", (r) => bpv(r, "pm"), C.morning, fmtBP(st.pmS, st.pmD)]);
@@ -2852,7 +2861,7 @@ function ExportWeekTables({ dates, records, plan, cols, weights }) {
         if (cols.amT) rows.push(["時刻 朝", (r) => (r ? slotText(r.amT) : ""), C.inkSoft, ""]);
         if (cols.pmT) rows.push(["時刻 夜", (r) => (r ? slotText(r.pmT) : ""), C.inkSoft, ""]);
         if (cols.w) rows.push(["体重", (r, d) => (wLabel[d] ? `${wLabel[d]}kg` : ""), C.ink, ""]);
-        const memoDays = cols.memo ? w.filter((d) => d >= dates[0] && d <= dates[dates.length - 1] && hasMemo(records[d])) : [];
+        const memoDays = cols.memo ? w.filter((d) => inR(d) && hasMemo(records[d])) : [];
         return (
           <div key={i} className="avoid-break">
             <div style={{ fontSize: 12.5, fontWeight: 700, color: C.inkSoft, marginBottom: 5, ...NUM }}>
@@ -2876,11 +2885,11 @@ function ExportWeekTables({ dates, records, plan, cols, weights }) {
                   {rows.map(([name, get, tone, av]) => (
                     <tr key={name}>
                       <th style={{ ...th, textAlign: "left", color: tone }}>{name}</th>
-                      {w.map((d) => <td key={d} style={td}>{get(records[d], d) || dash}</td>)}
+                      {w.map((d) => <td key={d} style={td}>{inR(d) ? (get(records[d], d) || dash) : ""}</td>)}
                       <td style={avgTd}>{av || dash}</td>
                     </tr>
                   ))}
-                  {cols.med && (
+                  {cols.med && planList(plan).length > 0 && (
                     <tr>
                       {planList(plan).length > 1 ? (
                         <th style={{ ...th, textAlign: "left", whiteSpace: "normal" }}>
@@ -2898,7 +2907,7 @@ function ExportWeekTables({ dates, records, plan, cols, weights }) {
                         const col = (v) => (v === 2 ? C.alert : v === 1 ? C.good : C.line);
                         return (
                           <td key={d} style={{ ...td, whiteSpace: "normal" }}>
-                            {r ? planList(plan).map(([k], j) => (
+                            {!inR(d) ? "" : r ? planList(plan).map(([k], j) => (
                               <span key={k} style={{ color: col(r[k]), fontWeight: 800 }}>{mk(r[k])}{j < planList(plan).length - 1 ? " " : ""}</span>
                             )) : dash}
                           </td>
@@ -2906,7 +2915,7 @@ function ExportWeekTables({ dates, records, plan, cols, weights }) {
                       })}
                       <td style={avgTd}>
                         {(() => {
-                          const mv = medVals(w, records, plan);
+                          const mv = medVals(wIn, records, plan);
                           return mv.length ? `${Math.round((mv.filter((v) => v === 1).length / mv.length) * 100)}%` : dash;
                         })()}
                       </td>
@@ -4340,7 +4349,10 @@ export default function App() {
       if (latest && latest !== mine) {
         updateTried.current = true;
         try { sessionStorage.setItem("bp-update-at", String(Date.now())); } catch { /* 省略可 */ }
-        window.location.replace(`/?u=${Date.now()}`);
+        // ?kiosk=1 などの起動パラメータを失わないよう、いまのクエリを保って u だけ付け替える
+        const q = new URLSearchParams(window.location.search);
+        q.set("u", String(Date.now()));
+        window.location.replace(`${window.location.pathname}?${q.toString()}`);
       }
     } catch { /* オフライン時は次の機会に */ }
   }, []);
