@@ -49,7 +49,7 @@ const C = {
 };
 const FONT = '"Meiryo","メイリオ",sans-serif';
 const NUM = { fontVariantNumeric: "tabular-nums", fontFeatureSettings: '"tnum"' };
-const APP_VERSION = "1.2.2";
+const APP_VERSION = "1.2.3";
 
 /* 画面の見た目（背景色・書体）。書体は端末に入っているものだけを使う（通信しない方針）。
    背景色は、枠線（line）・薄い塗り（tint/tintDeep）も同系色でひとそろいにする */
@@ -62,8 +62,7 @@ const BG_CHOICES = [
   ["cream", "クリーム", "#FBF7ED", "#EAE0C8", "#FBF7ED", "#F3EAD2"],
 ];
 const FONT_CHOICES = [
-  ["gothic", "メイリオ（標準）", '"Meiryo","メイリオ","Hiragino Kaku Gothic ProN",sans-serif'],
-  ["kaku", "ゴシック", '"Yu Gothic UI","YuGothic","Yu Gothic","Hiragino Kaku Gothic ProN","MS PGothic",sans-serif'],
+  ["gothic", "ゴシック（標準）", '"Meiryo","メイリオ","Hiragino Kaku Gothic ProN",sans-serif'],
   ["maru", "丸ゴシック", '"Hiragino Maru Gothic ProN","HGMaruGothicMPRO","HG丸ｺﾞｼｯｸM-PRO","Yu Gothic UI","Meiryo",sans-serif'],
   ["mincho", "明朝", '"Hiragino Mincho ProN","Yu Mincho","游明朝","MS PMincho",serif'],
 ];
@@ -1522,10 +1521,11 @@ function TimeCard({ weeksList, records, plan, weights, profile }) {
   const seg = (k, l) => (
     <button key={k} onClick={() => setView(k)}
       style={{
-        flex: 1, padding: "10px 4px", border: "none", cursor: "pointer",
+        // 狭い画面で「服薬状況」「はかった時刻」が切れないよう、折り返しを許して詰める
+        flex: 1, padding: "9px 2px", border: "none", cursor: "pointer",
         borderLeft: k === "med" ? "none" : `1px solid ${C.line}`,
         background: view === k ? C.ink : "#fff", color: view === k ? "#fff" : C.inkSoft,
-        fontSize: 13.5, fontWeight: 700,
+        fontSize: 13, fontWeight: 700, lineHeight: 1.35, whiteSpace: "normal",
       }}>{l}</button>
   );
 
