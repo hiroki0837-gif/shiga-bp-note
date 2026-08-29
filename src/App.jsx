@@ -49,7 +49,26 @@ const C = {
 };
 const FONT = '"Meiryo","メイリオ",sans-serif';
 const NUM = { fontVariantNumeric: "tabular-nums", fontFeatureSettings: '"tnum"' };
-const APP_VERSION = "1.1.1";
+const APP_VERSION = "1.2.0";
+
+/* 画面の見た目（背景色・書体）。書体は端末に入っているものだけを使う（通信しない方針） */
+const BG_CHOICES = [
+  ["sky", "水色", "#F1FAFF"],
+  ["sakura", "ピンク", "#FDF3F6"],
+  ["lavender", "うす紫", "#F6F3FB"],
+  ["mint", "うす緑", "#F1FAF3"],
+  ["cream", "クリーム", "#FBF7ED"],
+];
+const FONT_CHOICES = [
+  ["gothic", "ゴシック（標準）", '"Meiryo","メイリオ","Hiragino Kaku Gothic ProN",sans-serif'],
+  ["maru", "丸ゴシック", '"Hiragino Maru Gothic ProN","HGMaruGothicMPRO","HG丸ｺﾞｼｯｸM-PRO","Yu Gothic UI","Meiryo",sans-serif'],
+  ["ud", "UDゴシック", '"BIZ UDPGothic","BIZ UDGothic","Meiryo",sans-serif'],
+  ["yu", "游ゴシック", '"Yu Gothic Medium","Yu Gothic","YuGothic","游ゴシック体","Meiryo",sans-serif'],
+  ["mincho", "明朝", '"Hiragino Mincho ProN","Yu Mincho","游明朝","MS PMincho",serif'],
+];
+const emptyTheme = () => ({ bg: "sky", font: "gothic" });
+const themeBg = (t) => (BG_CHOICES.find(([k]) => k === (t && t.bg)) || BG_CHOICES[0])[2];
+const themeFont = (t) => (FONT_CHOICES.find(([k]) => k === (t && t.font)) || FONT_CHOICES[0])[2];
 
 /* ---------- 2. QRエンコーダ（数字モード・自己完結） ---------- */
 const ECB = {
@@ -316,8 +335,9 @@ const emptyTargets = () => ({ sys: "125", dia: "75" });
 const hasData = (r) => !!(r && (r.amS || r.pmS || r.amH || r.pmH || r.amI || r.pmI || r.mA || r.mN || r.mP || r.mB || hasMemo(r)));
 
 function migrate(d) {
-  const out = { schema: DATA_SCHEMA, records: {}, targets: emptyTargets(), learned: {}, visits: [], security: emptySecurity(), medPlan: emptyPlan(), exportPrefs: emptyExportPrefs(), profile: { ...emptyProfile(), id: newAnonId() }, weights: {} };
+  const out = { schema: DATA_SCHEMA, records: {}, targets: emptyTargets(), learned: {}, visits: [], security: emptySecurity(), medPlan: emptyPlan(), exportPrefs: emptyExportPrefs(), profile: { ...emptyProfile(), id: newAnonId() }, weights: {}, theme: emptyTheme() };
   if (!d || typeof d !== "object") return out;
+  out.theme = { ...emptyTheme(), ...(d.theme || {}) };
   out.targets = { ...out.targets, ...(d.targets || {}) };
   out.learned = d.learned && typeof d.learned === "object" ? d.learned : {};
   out.visits = Array.isArray(d.visits) ? d.visits : [];
@@ -2738,7 +2758,7 @@ function ExportCard({ records, plan, weights, targets, preview, setPreview, pref
             [tbl.head.join(","), ...tbl.rows.map((r) => r.join(","))].join("\r\n"))}>
           CSVで保存
         </Btn>
-        <Btn small filled={false} disabled={!tbl.rows.length} onClick={() => setPreview(preview ? null : { tbl, dates, records, plan, targets, showSummary, showCharts, showTable })}>
+        <Btn small filled={false} disabled={!tbl.rows.length} onClick={() => setPreview(preview ? null : { tbl, dates, records, plan, targets, cols, weights, showSummary, showCharts, showTable })}>
           {preview ? "印刷プレビューを閉じる" : "印刷プレビュー"}
         </Btn>
       </div>
@@ -2779,12 +2799,133 @@ function ExportSummary({ dates, records, targets, plan }) {
   );
 }
 
-function ExportPreview({ data, onClose }) {
-  const { tbl, dates, records, plan, targets, showSummary, showCharts, showTable } = data;
-  const th = { border: `1px solid ${C.line}`, padding: "6px 6px", fontSize: 11.5, fontWeight: 700, background: C.tint, color: C.ink, whiteSpace: "nowrap" };
-  const td = { border: `1px solid ${C.line}`, padding: "5px 6px", fontSize: 12, textAlign: "center", color: C.ink, ...NUM };
+/* 書き出しの印刷用の表。以前は「1日=1行・項目=列」だったが、項目を全部選ぶと列が
+   増えすぎて紙の右で切れた。医療者モードの印刷と同じ「週ごと・項目=行」の形にすれば、
+   列数は曜日ぶんで固定なので何項目選んでもはみ出さない。メモは表の下に日付つきで並べる */
+function ExportWeekTables({ dates, records, plan, cols, weights }) {
+  const th = { border: `1px solid ${C.line}`, padding: "6px 4px", fontSize: 11.5, fontWeight: 700, color: C.ink, background: C.tint, whiteSpace: "nowrap" };
+  const td = { border: `1px solid ${C.line}`, padding: "6px 2px", fontSize: 12.5, textAlign: "center", color: C.ink, whiteSpace: "nowrap", overflow: "hidden", ...NUM };
+  const avgTd = { ...td, background: C.tintDeep, fontWeight: 800, borderLeft: `2px solid ${C.inkSoft}` };
+
+  const weeks = [];
+  {
+    let cur = startOfWeekMon(dates[0]);
+    const last = dates[dates.length - 1];
+    while (cur <= last) { weeks.push(Array.from({ length: 7 }, (_, i) => addDays(cur, i))); cur = addDays(cur, 7); }
+  }
+  // 体重（月1回）は、各月で最初に値のある日に出す
+  const wLabel = {};
+  if (cols.w && weights) {
+    const seen = {};
+    for (const d of dates) {
+      const ym = d.slice(0, 7);
+      if (!seen[ym] && weights[ym]) { seen[ym] = 1; wLabel[d] = weights[ym]; }
+    }
+  }
+  const dash = <span style={{ color: C.line }}>—</span>;
+  const bpv = (r, p) => (r && r[p + "S"] ? `${r[p + "S"]}/${r[p + "D"] || "-"}` : "");
+  const hrv = (r, p) => (r && r[p + "H"] ? (r[p + "I"] ? `${r[p + "H"]}*` : r[p + "H"]) : "");
+  const fmtBP = (a, b) => (a == null ? "" : `${Math.round(a)}/${b == null ? "-" : Math.round(b)}`);
+
   return (
-    <Card title="印刷プレビュー" sub={`${dates[0]} 〜 ${dates[dates.length - 1]}（${tbl.rows.length}行）`}>
+    <div className="flex flex-col gap-5">
+      {weeks.map((w, i) => {
+        const st = weekStats(w, records);
+        const rows = [];
+        if (cols.amBP) rows.push(["血圧 朝", (r) => bpv(r, "am"), C.evening, fmtBP(st.amS, st.amD)]);
+        if (cols.pmBP) rows.push(["血圧 夜", (r) => bpv(r, "pm"), C.morning, fmtBP(st.pmS, st.pmD)]);
+        if (cols.amHR) rows.push(["脈拍 朝", (r) => hrv(r, "am"), C.evening, st.amH == null ? "" : String(Math.round(st.amH))]);
+        if (cols.pmHR) rows.push(["脈拍 夜", (r) => hrv(r, "pm"), C.morning, st.pmH == null ? "" : String(Math.round(st.pmH))]);
+        if (cols.amT) rows.push(["時刻 朝", (r) => (r ? slotText(r.amT) : ""), C.inkSoft, ""]);
+        if (cols.pmT) rows.push(["時刻 夜", (r) => (r ? slotText(r.pmT) : ""), C.inkSoft, ""]);
+        if (cols.w) rows.push(["体重", (r, d) => (wLabel[d] ? `${wLabel[d]}kg` : ""), C.ink, ""]);
+        const memoDays = cols.memo ? w.filter((d) => d >= dates[0] && d <= dates[dates.length - 1] && hasMemo(records[d])) : [];
+        return (
+          <div key={i} className="avoid-break">
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: C.inkSoft, marginBottom: 5, ...NUM }}>
+              {fmtMD(w[0])} 〜 {fmtMD(w[6])}
+            </div>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ borderCollapse: "collapse", width: "100%", minWidth: 560, tableLayout: "fixed" }}>
+                <colgroup>
+                  <col style={{ width: "14.5%" }} />
+                  {w.map((d) => <col key={d} style={{ width: "10.5%" }} />)}
+                  <col style={{ width: "12%" }} />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th style={{ ...th, textAlign: "left" }}>日付</th>
+                    {w.map((d) => <th key={d} style={th}>{fmtMD(d)}<br /><span style={{ fontWeight: 400, color: C.inkSoft }}>({fmtWD(d)})</span></th>)}
+                    <th style={{ ...th, background: C.tintDeep, color: C.good, borderLeft: `2px solid ${C.inkSoft}` }}>週平均</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map(([name, get, tone, av]) => (
+                    <tr key={name}>
+                      <th style={{ ...th, textAlign: "left", color: tone }}>{name}</th>
+                      {w.map((d) => <td key={d} style={td}>{get(records[d], d) || dash}</td>)}
+                      <td style={avgTd}>{av || dash}</td>
+                    </tr>
+                  ))}
+                  {cols.med && (
+                    <tr>
+                      {planList(plan).length > 1 ? (
+                        <th style={{ ...th, textAlign: "left", whiteSpace: "normal" }}>
+                          お薬<br />
+                          <span style={{ fontWeight: 600, fontSize: 10, color: C.inkSoft }}>
+                            {planList(plan).map(([, jp]) => jp).join("/")}
+                          </span>
+                        </th>
+                      ) : (
+                        <th style={{ ...th, textAlign: "left" }}>お薬 {planList(plan).map(([, jp]) => jp).join("/")}</th>
+                      )}
+                      {w.map((d) => {
+                        const r = records[d];
+                        const mk = (v) => (v === 1 ? "✓" : v === 2 ? "×" : "・");
+                        const col = (v) => (v === 2 ? C.alert : v === 1 ? C.good : C.line);
+                        return (
+                          <td key={d} style={{ ...td, whiteSpace: "normal" }}>
+                            {r ? planList(plan).map(([k], j) => (
+                              <span key={k} style={{ color: col(r[k]), fontWeight: 800 }}>{mk(r[k])}{j < planList(plan).length - 1 ? " " : ""}</span>
+                            )) : dash}
+                          </td>
+                        );
+                      })}
+                      <td style={avgTd}>
+                        {(() => {
+                          const mv = medVals(w, records, plan);
+                          return mv.length ? `${Math.round((mv.filter((v) => v === 1).length / mv.length) * 100)}%` : dash;
+                        })()}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            {memoDays.length > 0 && (
+              <div style={{ fontSize: 12, color: C.ink, lineHeight: 1.9, marginTop: 6 }}>
+                {memoDays.map((d) => {
+                  const r = records[d];
+                  const tags = (r.tags || []).map((k) => (MEMO_TAGS.find(([x]) => x === k) || [k, k])[1]);
+                  return (
+                    <div key={d}>
+                      <b style={{ ...NUM }}>{fmtMD(d)}（{fmtWD(d)}）</b>　{[...tags, (r.memo || "").trim()].filter(Boolean).join("・")}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function ExportPreview({ data, onClose }) {
+  const { tbl, dates, records, plan, targets, cols, weights, showSummary, showCharts, showTable } = data;
+  return (
+    <Card title="印刷プレビュー" sub={`${dates[0]} 〜 ${dates[dates.length - 1]}（記録 ${tbl.rows.length}日）`}>
       {showSummary && records && (
         <div style={{ marginBottom: 14 }}>
           <ExportSummary dates={dates} records={records} targets={targets} plan={plan} />
@@ -2798,16 +2939,7 @@ function ExportPreview({ data, onClose }) {
       )}
 
       {showTable !== false && (
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ borderCollapse: "collapse", width: "100%" }}>
-            <thead><tr>{tbl.head.map((h, i) => <th key={i} style={th}>{h}</th>)}</tr></thead>
-            <tbody>
-              {tbl.rows.map((r, i) => (
-                <tr key={i}>{r.map((v, j) => <td key={j} style={{ ...td, textAlign: j < 2 ? "left" : "center" }}>{v || "—"}</td>)}</tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <ExportWeekTables dates={dates} records={records} plan={plan} cols={cols || DEFAULT_COLS} weights={weights} />
       )}
       <div className="no-print flex gap-2" style={{ marginTop: 14 }}>
         <Btn small onClick={() => window.print()}>印刷 / PDFで保存</Btn>
@@ -4032,9 +4164,9 @@ function KioskView({ onExit }) {
 
 /* ---------- 共通の外枠 ---------- */
 const ROOT_STYLE = { fontFamily: FONT, background: C.paper, minHeight: "100vh", color: C.ink };
-function GlobalStyle() {
+function GlobalStyle({ font = FONT }) {
   return <style>{`
-        .bp-root, .bp-root * { font-family: ${FONT}; }
+        .bp-root, .bp-root * { font-family: ${font}; }
         @media print {
           @page { size: A4; margin: 12mm 10mm; }
           /* 余分なページが出ないように、末尾の余白を殺す */
@@ -4075,8 +4207,8 @@ function GlobalStyle() {
           /* 凡例の線アイコン（小さなSVG）まで100%に広げない。広がると「朝／夜」が線の下に
              折り返され、伸びた線が日付ラベルに重なる。アイコンは属性の幅(18px)のまま使う */
           .recharts-legend-wrapper svg { width: auto !important; height: auto !important; }
-          /* カーソルを合わせたときの吹き出しは紙に出さない */
-          .recharts-tooltip-wrapper, .recharts-active-dot { display: none !important; }
+          /* カーソルを合わせたときの吹き出し・カーソル線・強調点は紙に出さない */
+          .recharts-tooltip-wrapper, .recharts-tooltip-cursor, .recharts-active-dot { display: none !important; }
           /* 最後に余白のページができないように */
           section:last-child { page-break-after: auto; }
         }
@@ -4119,6 +4251,7 @@ export default function App() {
   const [exportPrefs, setExportPrefs] = useState(emptyExportPrefs());
   const [profile, setProfile] = useState(emptyProfile());
   const [weights, setWeights] = useState({});
+  const [theme, setTheme] = useState(emptyTheme());
   const [locked, setLocked] = useState(false);
 
   const [vault, setVault] = useState(null);        // 暗号化されたまま保持
@@ -4127,6 +4260,7 @@ export default function App() {
   const applyData = useCallback((d) => {
     setRecords(d.records); setTargets(d.targets); setLearned(d.learned); setVisits(d.visits);
     setMedPlan(d.medPlan); setExportPrefs(d.exportPrefs); setProfile(d.profile); setWeights(d.weights);
+    setTheme(d.theme || emptyTheme());
   }, []);
 
   useEffect(() => {
@@ -4149,7 +4283,7 @@ export default function App() {
   }, [applyData]);
   useEffect(() => {
     if (!loaded || locked) return;
-    const data = { records, targets, learned, visits, medPlan, exportPrefs, profile, weights, schema: DATA_SCHEMA };
+    const data = { records, targets, learned, visits, medPlan, exportPrefs, profile, weights, theme, schema: DATA_SCHEMA };
     (async () => {
       if (dataKey && security.enabled && canCrypt()) {
         const { iv, payload } = await encryptJSON(dataKey, data);
@@ -4158,10 +4292,10 @@ export default function App() {
         await store.writeRaw({ ...data, security });
       }
     })();
-  }, [records, targets, learned, visits, security, medPlan, exportPrefs, profile, weights, loaded, locked, dataKey]);
+  }, [records, targets, learned, visits, security, medPlan, exportPrefs, profile, weights, theme, loaded, locked, dataKey]);
 
   const openSettings = () => {
-    snap.current = { targets, medPlan, profile, exportPrefs, security, weights };
+    snap.current = { targets, medPlan, profile, exportPrefs, security, weights, theme };
     setSettingsTab("main"); setSettings(true);
   };
   const closeSettings = (keep) => {
@@ -4169,6 +4303,7 @@ export default function App() {
       const s0 = snap.current;
       setTargets(s0.targets); setMedPlan(s0.medPlan); setProfile(s0.profile);
       setExportPrefs(s0.exportPrefs); setSecurity(s0.security); setWeights(s0.weights);
+      setTheme(s0.theme);
     }
     snap.current = null; setSettings(false); setExportPreview(null);
   };
@@ -4263,8 +4398,8 @@ export default function App() {
 
   if (loaded && locked) {
     return (
-      <div className="bp-root" style={ROOT_STYLE}>
-        <GlobalStyle />
+      <div className="bp-root" style={{ ...ROOT_STYLE, background: themeBg(theme), fontFamily: themeFont(theme) }}>
+        <GlobalStyle font={themeFont(theme)} />
         <LockScreen security={security} onUnlock={() => setLocked(false)}
           unlockWith={unlockWith} unlockWithBio={unlockWithBio}
           onWipe={async () => {
@@ -4279,8 +4414,8 @@ export default function App() {
 
   if (kiosk || kioskByHand) {
     return (
-      <div className="bp-root" style={ROOT_STYLE}>
-        <GlobalStyle />
+      <div className="bp-root" style={{ ...ROOT_STYLE, background: themeBg(theme), fontFamily: themeFont(theme) }}>
+        <GlobalStyle font={themeFont(theme)} />
         <KioskView onExit={kioskByHand ? () => setKioskByHand(false) : null} />
       </div>
     );
@@ -4288,8 +4423,8 @@ export default function App() {
 
   if (loaded && !profile.done) {
     return (
-      <div className="bp-root" style={ROOT_STYLE}>
-        <GlobalStyle />
+      <div className="bp-root" style={{ ...ROOT_STYLE, background: themeBg(theme), fontFamily: themeFont(theme) }}>
+        <GlobalStyle font={themeFont(theme)} />
         <SetupScreen profile={profile} setProfile={setProfile}
           onDone={() => setProfile({ ...profile, done: true })} />
       </div>
@@ -4297,8 +4432,8 @@ export default function App() {
   }
 
   return (
-    <div className="bp-root" style={ROOT_STYLE}>
-      <GlobalStyle />
+    <div className="bp-root" style={{ ...ROOT_STYLE, background: themeBg(theme), fontFamily: themeFont(theme) }}>
+      <GlobalStyle font={themeFont(theme)} />
 
       <header className="no-print" style={{ background: "#FFFFFF", borderBottom: `3px solid #54A9F0`, padding: "16px 18px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
@@ -4605,6 +4740,35 @@ export default function App() {
                 }
               }}
               onPinOff={async () => { setDataKey(null); await bioKeyStore.clear(); }} />
+
+            <Card title="画面の見た目" sub="背景の色と文字の書体を選べます">
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.inkSoft, marginBottom: 8 }}>背景の色</div>
+              <div className="flex flex-wrap gap-2">
+                {BG_CHOICES.map(([k, jp, color]) => (
+                  <button key={k} onClick={() => setTheme({ ...theme, bg: k })}
+                    style={{
+                      padding: "12px 16px", borderRadius: 3, cursor: "pointer",
+                      fontSize: 13.5, fontWeight: 700, color: C.ink, background: color,
+                      border: `2px solid ${theme.bg === k ? C.evening : C.line}`,
+                    }}>{theme.bg === k ? "✓ " : ""}{jp}</button>
+                ))}
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.inkSoft, margin: "16px 0 8px" }}>文字の書体</div>
+              <div className="flex flex-wrap gap-2">
+                {FONT_CHOICES.map(([k, jp, stack]) => (
+                  <button key={k} onClick={() => setTheme({ ...theme, font: k })}
+                    style={{
+                      padding: "12px 16px", borderRadius: 3, cursor: "pointer",
+                      fontSize: 14.5, fontWeight: 700, color: C.ink, fontFamily: stack,
+                      background: theme.font === k ? C.tint : "#fff",
+                      border: `2px solid ${theme.font === k ? C.evening : C.line}`,
+                    }}>{theme.font === k ? "✓ " : ""}{jp}</button>
+                ))}
+              </div>
+              <p style={{ fontSize: 12, color: C.inkSoft, lineHeight: 1.8, marginTop: 12 }}>
+                選んだ書体が端末に入っていない場合は、標準の書体で表示されます。
+              </p>
+            </Card>
 
             <ExportCard records={records} plan={medPlan} weights={weights} targets={targets} preview={exportPreview} setPreview={setExportPreview}
               prefs={exportPrefs} onSavePrefs={setExportPrefs} />

@@ -39,7 +39,7 @@ button, input, textarea, select { font-family: inherit; }
   th, td { padding: 3px 2px !important; }
   .avoid-break { break-inside: avoid; page-break-inside: avoid; }
   section { break-inside: auto; page-break-inside: auto; }
-  .recharts-tooltip-wrapper, .recharts-active-dot { display: none !important; }
+  .recharts-tooltip-wrapper, .recharts-tooltip-cursor, .recharts-active-dot { display: none !important; }
   html, body { height: auto !important; overflow-x: hidden !important; }
   /* 直下のSVG（グラフ本体）だけ。凡例のアイコンSVGまで広げるとラベルが折り返される */
   .recharts-wrapper, .recharts-wrapper > svg { width: 100% !important; max-width: 100% !important; }
