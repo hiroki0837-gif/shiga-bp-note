@@ -49,7 +49,7 @@ const C = {
 };
 const FONT = '"Meiryo","メイリオ",sans-serif';
 const NUM = { fontVariantNumeric: "tabular-nums", fontFeatureSettings: '"tnum"' };
-const APP_VERSION = "1.3.1";
+const APP_VERSION = "1.4.0";
 
 /* 画面の見た目（背景色・書体）。書体は端末に入っているものだけを使う（通信しない方針）。
    背景色は、枠線（line）・薄い塗り（tint/tintDeep）も同系色でひとそろいにする */
@@ -1192,7 +1192,9 @@ function TodayView({ date, setDate, rec, update, targets, plan, weights, setWeig
         </div>
       </Card>
 
-      <Card title="お薬" sub={planList(plan).length ? "" : "「設定」で飲む回数を選んでください"}>
+      {/* 内服薬なし（枠を全部オフ）のときは、お薬のカード自体を出さない */}
+      {planList(plan).length > 0 && (
+      <Card title="お薬">
         <div className="flex flex-col gap-3">
           {planList(plan).map(([k, jp]) => (
             <div key={k} className="flex items-center gap-3">
@@ -1213,6 +1215,7 @@ function TodayView({ date, setDate, rec, update, targets, plan, weights, setWeig
           ))}
         </div>
       </Card>
+      )}
 
       <Card title="きょうのメモ" sub="あてはまるものを押してください。自由に書くこともできます">
         <div className="flex flex-wrap gap-2">
@@ -2560,36 +2563,97 @@ const isStandalone = () => {
   } catch { return false; }
 };
 
-function SetupScreen({ profile, setProfile, onDone }) {
-  const showHomeHint = isIOS() && !isStandalone();
+// 初回設定は2段階。①ホーム画面への追加を促すページ → ②あなたのこと＋お薬を飲む回数。
+// ホーム画面のアイコンから開いている場合は①を飛ばす
+const MED_PRESETS = [
+  ["内服薬なし", { mA: false, mN: false, mP: false, mB: false }],
+  ["朝のみ", { mA: true, mN: false, mP: false, mB: false }],
+  ["朝夕", { mA: true, mN: false, mP: true, mB: false }],
+  ["朝昼夕", { mA: true, mN: true, mP: true, mB: false }],
+  ["朝夕＋寝る前", { mA: true, mN: false, mP: true, mB: true }],
+  ["朝昼夕＋寝る前", { mA: true, mN: true, mP: true, mB: true }],
+];
+const planEq = (a, b) => MED_SLOTS.every(([k]) => !!a[k] === !!b[k]);
+
+function SetupScreen({ profile, setProfile, medPlan, setMedPlan, onDone }) {
+  const [step, setStep] = useState(isStandalone() ? 2 : 1);
+
+  const head = (sub) => (
+    <div style={{ textAlign: "center", marginBottom: 24 }}>
+      <div style={{ fontSize: 22, fontWeight: 800, color: C.ink, letterSpacing: "0.06em" }}>しが血圧ノート</div>
+      <div style={{ fontSize: 12.5, color: C.inkSoft, marginTop: 6, lineHeight: 1.8 }}>{sub}</div>
+    </div>
+  );
+
+  if (step === 1) {
+    return (
+      <div style={{ maxWidth: 520, margin: "0 auto", padding: "36px 16px 60px" }}>
+        {head("毎日の記録と高血圧の知識")}
+        <Card style={{ borderColor: C.evening, borderLeft: `5px solid ${C.evening}` }}>
+          <div style={{ fontSize: 17, fontWeight: 800, color: C.ink, marginBottom: 10 }}>
+            まず「ホーム画面に追加」してください
+          </div>
+          <p style={{ fontSize: 13.5, color: C.ink, lineHeight: 1.9, margin: "0 0 12px" }}>
+            毎日使うアプリなので、ホーム画面から1回で開けるようにしておきましょう。
+          </p>
+          <div style={{ background: C.tint, border: `1px solid ${C.line}`, borderRadius: 3, padding: "10px 12px", marginBottom: 8 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: C.ink }}>iPhone</div>
+            <div style={{ fontSize: 13, color: C.ink, lineHeight: 1.9 }}>
+              画面下の<b>共有ボタン（□に↑）</b> → <b>「ホーム画面に追加」</b>
+            </div>
+          </div>
+          <div style={{ background: C.tint, border: `1px solid ${C.line}`, borderRadius: 3, padding: "10px 12px", marginBottom: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: C.ink }}>Android</div>
+            <div style={{ fontSize: 13, color: C.ink, lineHeight: 1.9 }}>
+              右上の<b>メニュー（︙）</b> → <b>「ホーム画面に追加」</b>
+            </div>
+          </div>
+          {isIOS() && (
+            <p style={{ fontSize: 13, fontWeight: 700, color: C.morning, lineHeight: 1.9, margin: "0 0 12px" }}>
+              iPhoneでは、ブラウザとホーム画面のアプリで記録の保存場所が別になります。
+              追加できたら、この画面は閉じて、<b>ホーム画面のアイコンから開き直して</b>ください。
+              つづきの設定はそちらで始まります。
+            </p>
+          )}
+          <div style={{ borderTop: `1px solid ${C.line}`, paddingTop: 14 }}>
+            <Btn filled={false} tone={C.inkSoft} onClick={() => setStep(2)}>追加せずにこのまま進む</Btn>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div style={{ maxWidth: 520, margin: "0 auto", padding: "36px 16px 60px" }}>
-      <div style={{ textAlign: "center", marginBottom: 24 }}>
-        <div style={{ fontSize: 22, fontWeight: 800, color: C.ink, letterSpacing: "0.06em" }}>しが血圧ノート</div>
-        <div style={{ fontSize: 12.5, color: C.inkSoft, marginTop: 6, lineHeight: 1.8 }}>
-          はじめに、あなたのことを教えてください
-        </div>
-      </div>
-
-      {showHomeHint && (
-        <Card style={{ borderColor: C.morning, borderLeft: `5px solid ${C.morning}`, marginBottom: 14 }}>
-          <div style={{ fontSize: 14, fontWeight: 800, color: C.ink, marginBottom: 8 }}>
-            さきに「ホーム画面に追加」してください
-          </div>
-          <p style={{ fontSize: 13, color: C.ink, lineHeight: 1.9, margin: 0 }}>
-            iPhoneでは、ブラウザとホーム画面に追加したアプリで<b>記録の保存場所が別</b>になります。
-            このまま入力すると、あとでホーム画面から開いたときに<b>最初からやり直し</b>になります。
-          </p>
-          <p style={{ fontSize: 13, color: C.inkSoft, lineHeight: 1.9, margin: "8px 0 0" }}>
-            画面下の<b>共有ボタン（□に↑）</b>から<b>「ホーム画面に追加」</b>を選び、
-            ホーム画面にできたアイコンから開き直して設定してください。
-          </p>
-        </Card>
-      )}
+      {head("はじめに、あなたのことを教えてください")}
 
       <Card>
         <ProfileFields profile={profile} setProfile={setProfile} />
-        <p style={{ fontSize: 12, color: C.inkSoft, lineHeight: 1.8, marginTop: 16 }}>
+
+        <div style={{ borderTop: `1px solid ${C.line}`, marginTop: 18, paddingTop: 16 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: C.ink, marginBottom: 8 }}>お薬を飲む回数</div>
+          <div className="flex flex-wrap gap-2">
+            {MED_PRESETS.map(([l, preset]) => {
+              const on = planEq(medPlan, preset);
+              return (
+                <button key={l} onClick={() => setMedPlan({ ...preset })}
+                  style={{
+                    padding: "11px 14px", borderRadius: 3, fontSize: 14, fontWeight: 700, cursor: "pointer",
+                    border: `2px solid ${on ? C.evening : C.line}`,
+                    background: on ? C.evening : "#fff", color: on ? "#fff" : C.inkSoft,
+                  }}>{on ? "✓ " : ""}{l}</button>
+              );
+            })}
+          </div>
+          <p style={{ fontSize: 12, color: C.inkSoft, lineHeight: 1.8, marginTop: 10 }}>
+            {planList(medPlan).length === 0
+              ? "「内服薬なし」の方は、きょうの画面にお薬の欄は出ません。"
+              : "選んだ回数だけ、きょうの画面にお薬のチェック欄が出ます。"}
+            こまかい組み合わせは、あとから「設定」で変えられます。
+          </p>
+        </div>
+
+        <p style={{ fontSize: 12, color: C.inkSoft, lineHeight: 1.8, marginTop: 12 }}>
           入力した内容はこの端末の中だけに保存されます。外部に送られることはありません。
           あとから「設定」で変えられます。
         </p>
@@ -2635,12 +2699,13 @@ function ManualCard() {
   return (
     <Card title="使い方" sub="項目を押すと説明が開きます">
       <Sec title="はじめる・ホーム画面に追加">
-        <P>QRコードを読み取って開いたら、まず<b>「ホーム画面に追加」</b>してください。</P>
+        <P>はじめて開くと「ホーム画面に追加」の案内が出ます。画面の説明にそって追加してください。</P>
         <P>iPhone：画面下の共有ボタン（□に↑）→「ホーム画面に追加」<br />
            Android：右上のメニュー（︙）→「ホーム画面に追加」</P>
         <Note>iPhoneでは、ブラウザとホーム画面のアプリで<b>記録の保存場所が別</b>になります。
           必ず先にホーム画面に追加し、できたアイコンから開いて設定・記録を始めてください。</Note>
-        <P>そのあと、生年月日・性別・身長を入れて「はじめる」を押します。</P>
+        <P>そのあと、生年月日・性別・身長・お薬を飲む回数を入れて「はじめる」を押します。
+           お薬を飲んでいない方は「内服薬なし」を選ぶと、きょうの画面にお薬の欄は出ません。</P>
       </Sec>
       <Sec title="画面の見かた">
         <Tbl rows={[
@@ -4516,7 +4581,7 @@ export default function App() {
     return (
       <div className="bp-root" style={{ ...ROOT_STYLE, background: themeBg(theme), fontFamily: themeFont(theme) }}>
         <GlobalStyle font={themeFont(theme)} />
-        <SetupScreen profile={profile} setProfile={setProfile}
+        <SetupScreen profile={profile} setProfile={setProfile} medPlan={medPlan} setMedPlan={setMedPlan}
           onDone={() => setProfile({ ...profile, done: true })} />
       </div>
     );
