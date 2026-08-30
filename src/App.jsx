@@ -49,7 +49,7 @@ const C = {
 };
 const FONT = '"Meiryo","メイリオ",sans-serif';
 const NUM = { fontVariantNumeric: "tabular-nums", fontFeatureSettings: '"tnum"' };
-const APP_VERSION = "1.3.0";
+const APP_VERSION = "1.3.1";
 
 /* 画面の見た目（背景色・書体）。書体は端末に入っているものだけを使う（通信しない方針）。
    背景色は、枠線（line）・薄い塗り（tint/tintDeep）も同系色でひとそろいにする */
@@ -4736,23 +4736,6 @@ export default function App() {
               <ProfileFields profile={profile} setProfile={setProfile} />
             </Card>
 
-            <Card title="目標の血圧" sub="家庭ではかった値の目標です。主治医に確認して入れてください">
-              <div className="flex items-center gap-2 flex-wrap">
-                <NumInput value={targets.sys} onChange={(v) => setTargets({ ...targets, sys: v })} placeholder="上" />
-                <span style={{ color: C.inkSoft }}>/</span>
-                <NumInput value={targets.dia} onChange={(v) => setTargets({ ...targets, dia: v })} placeholder="下" unit="mmHg 未満" />
-              </div>
-              <div className="flex gap-2 flex-wrap" style={{ marginTop: 14 }}>
-                {[["標準", "125", "75"], ["ゆるやか", "135", "85"]].map(([l, a, b]) => (
-                  <Btn key={l} small filled={false} onClick={() => setTargets({ sys: a, dia: b })}>{l}（{a}/{b}）</Btn>
-                ))}
-              </div>
-              <p style={{ fontSize: 12, color: C.inkSoft, lineHeight: 1.8, marginTop: 12 }}>
-                2025年のガイドラインでは、年齢や持病によらず家庭血圧 125/75 mmHg 未満が目標です。
-                体力の低下やふらつきがある方は、主治医の判断でゆるやかな目標になることがあります。
-              </p>
-            </Card>
-
             <Card title="お薬を飲む回数" sub="選んだ回数だけ、きょうの画面にチェック欄が出ます">
               <div className="flex flex-wrap gap-2" style={{ marginBottom: 14 }}>
                 {[["朝のみ", { mA: 1 }], ["朝夕", { mA: 1, mP: 1 }], ["朝昼夕", { mA: 1, mN: 1, mP: 1 }],
@@ -4780,43 +4763,21 @@ export default function App() {
               </p>
             </Card>
 
-            <Card title="データ" sub="記録はこの端末の中だけに保存されます">
-              <div className="flex gap-2 flex-wrap">
-                <Btn small filled={false} onClick={() => {
-                  const r = {};
-                  const start = addDays(startOfWeekMon(todayISO()), -84);
-                  for (let i = 0; i < 91; i++) {
-                    const d = addDays(start, i);
-                    if (d > todayISO() || i % 8 === 5) continue;
-                    const base = 142 - i * 0.16;
-                    r[d] = {
-                      amS: String(Math.round(base + Math.random() * 8)), amD: String(Math.round(82 - i * 0.2 + Math.random() * 5)),
-                      amH: String(Math.round(70 + Math.random() * 8)),
-                      pmS: String(Math.round(base - 5 + Math.random() * 8)), pmD: String(Math.round(78 - i * 0.2 + Math.random() * 5)),
-                      pmH: String(Math.round(72 + Math.random() * 8)),
-                      amI: i % 9 === 2 ? 1 : 0, pmI: 0,
-                      mA: i % 11 === 3 ? 2 : 1, mN: 0, mP: 0, mB: 0,
-                      amT: String(25 + (i % 4)).padStart(2, "0"), pmT: String(84 + (i % 3)).padStart(2, "0"),
-                    };
-                  }
-                  setRecords(r);
-                  // 月に1回の体重も入れる（4か月ぶん）
-                  const w = {};
-                  for (let m = 3; m >= 0; m--) {
-                    const d = addDays(`${ymOf(todayISO())}-01`, 0);
-                    const dt = parseISO(d); dt.setMonth(dt.getMonth() - m);
-                    w[ymOf(iso(dt))] = (65.4 - (3 - m) * 0.5).toFixed(1);
-                  }
-                  setWeights(w);
-                  if (!profile.height) setProfile({ ...profile, height: "162" });
-                }}>デモデータを入れる</Btn>
-                {wipe
-                  ? <>
-                    <Btn small tone={C.alert} onClick={() => { setRecords({}); setLearned({}); setVisits([]); setWeights({}); setWipe(false); }}>本当に消す</Btn>
-                    <Btn small filled={false} onClick={() => setWipe(false)}>やめる</Btn>
-                  </>
-                  : <Btn small filled={false} tone={C.alert} onClick={() => setWipe(true)}>記録をすべて消す</Btn>}
+            <Card title="目標の血圧" sub="家庭ではかった値の目標です。主治医に確認して入れてください">
+              <div className="flex items-center gap-2 flex-wrap">
+                <NumInput value={targets.sys} onChange={(v) => setTargets({ ...targets, sys: v })} placeholder="上" />
+                <span style={{ color: C.inkSoft }}>/</span>
+                <NumInput value={targets.dia} onChange={(v) => setTargets({ ...targets, dia: v })} placeholder="下" unit="mmHg 未満" />
               </div>
+              <div className="flex gap-2 flex-wrap" style={{ marginTop: 14 }}>
+                {[["標準", "125", "75"], ["ゆるやか", "135", "85"]].map(([l, a, b]) => (
+                  <Btn key={l} small filled={false} onClick={() => setTargets({ sys: a, dia: b })}>{l}（{a}/{b}）</Btn>
+                ))}
+              </div>
+              <p style={{ fontSize: 12, color: C.inkSoft, lineHeight: 1.8, marginTop: 12 }}>
+                2025年のガイドラインでは、年齢や持病によらず家庭血圧 125/75 mmHg 未満が目標です。
+                体力の低下やふらつきがある方は、主治医の判断でゆるやかな目標になることがあります。
+              </p>
             </Card>
 
             <SecurityCard security={security} setSecurity={setSecurity}
@@ -4865,6 +4826,45 @@ export default function App() {
 
             <ExportCard records={records} plan={medPlan} weights={weights} targets={targets} preview={exportPreview} setPreview={setExportPreview}
               prefs={exportPrefs} onSavePrefs={setExportPrefs} />
+
+            <Card title="データ" sub="記録はこの端末の中だけに保存されます">
+              <div className="flex gap-2 flex-wrap">
+                <Btn small filled={false} onClick={() => {
+                  const r = {};
+                  const start = addDays(startOfWeekMon(todayISO()), -84);
+                  for (let i = 0; i < 91; i++) {
+                    const d = addDays(start, i);
+                    if (d > todayISO() || i % 8 === 5) continue;
+                    const base = 142 - i * 0.16;
+                    r[d] = {
+                      amS: String(Math.round(base + Math.random() * 8)), amD: String(Math.round(82 - i * 0.2 + Math.random() * 5)),
+                      amH: String(Math.round(70 + Math.random() * 8)),
+                      pmS: String(Math.round(base - 5 + Math.random() * 8)), pmD: String(Math.round(78 - i * 0.2 + Math.random() * 5)),
+                      pmH: String(Math.round(72 + Math.random() * 8)),
+                      amI: i % 9 === 2 ? 1 : 0, pmI: 0,
+                      mA: i % 11 === 3 ? 2 : 1, mN: 0, mP: 0, mB: 0,
+                      amT: String(25 + (i % 4)).padStart(2, "0"), pmT: String(84 + (i % 3)).padStart(2, "0"),
+                    };
+                  }
+                  setRecords(r);
+                  // 月に1回の体重も入れる（4か月ぶん）
+                  const w = {};
+                  for (let m = 3; m >= 0; m--) {
+                    const d = addDays(`${ymOf(todayISO())}-01`, 0);
+                    const dt = parseISO(d); dt.setMonth(dt.getMonth() - m);
+                    w[ymOf(iso(dt))] = (65.4 - (3 - m) * 0.5).toFixed(1);
+                  }
+                  setWeights(w);
+                  if (!profile.height) setProfile({ ...profile, height: "162" });
+                }}>デモデータを入れる</Btn>
+                {wipe
+                  ? <>
+                    <Btn small tone={C.alert} onClick={() => { setRecords({}); setLearned({}); setVisits([]); setWeights({}); setWipe(false); }}>本当に消す</Btn>
+                    <Btn small filled={false} onClick={() => setWipe(false)}>やめる</Btn>
+                  </>
+                  : <Btn small filled={false} tone={C.alert} onClick={() => setWipe(true)}>記録をすべて消す</Btn>}
+              </div>
+            </Card>
 
             </>}
 
