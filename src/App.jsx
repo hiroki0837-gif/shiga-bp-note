@@ -49,7 +49,7 @@ const C = {
 };
 const FONT = '"Meiryo","メイリオ",sans-serif';
 const NUM = { fontVariantNumeric: "tabular-nums", fontFeatureSettings: '"tnum"' };
-const APP_VERSION = "1.4.1";
+const APP_VERSION = "1.4.2";
 
 /* 画面の見た目（背景色・書体）。書体は端末に入っているものだけを使う（通信しない方針）。
    背景色は、枠線（line）・薄い塗り（tint/tintDeep）も同系色でひとそろいにする */
@@ -2602,13 +2602,23 @@ function SetupScreen({ profile, setProfile, medPlan, setMedPlan, onDone }) {
               画面下のアドレスバー右端の<b>「…」</b> → <b>「共有」</b> → <b>「ホーム画面に追加」</b>
             </div>
             <div style={{ fontSize: 12, color: C.inkSoft, lineHeight: 1.8, marginTop: 4 }}>
-              「…」がない場合は、共有ボタン（□に↑）→「ホーム画面に追加」
+              「…」がない場合は、共有ボタン（□に↑）→「ホーム画面に追加」。
+              見つからないときは、共有の一覧を<b>下までスクロール</b>してください。
             </div>
           </div>
           <div style={{ background: C.tint, border: `1px solid ${C.line}`, borderRadius: 3, padding: "10px 12px", marginBottom: 12 }}>
             <div style={{ fontSize: 13, fontWeight: 800, color: C.ink }}>Android</div>
             <div style={{ fontSize: 13, color: C.ink, lineHeight: 1.9 }}>
               右上の<b>メニュー（︙）</b> → <b>「ホーム画面に追加」</b>
+            </div>
+            <div style={{ fontSize: 12, color: C.inkSoft, lineHeight: 1.8, marginTop: 4 }}>
+              「アプリをインストール」と出る場合は、それを押してください。
+            </div>
+          </div>
+          <div style={{ background: C.alertBg, borderLeft: `4px solid ${C.alert}`, borderRadius: 3, padding: "8px 10px", marginBottom: 12 }}>
+            <div style={{ fontSize: 12.5, color: C.ink, lineHeight: 1.9 }}>
+              LINEなどの<b>アプリの中で開いている</b>と、ホーム画面に追加できません。
+              画面すみの共有やメニューから<b>「Safariで開く」</b>（Androidは「ブラウザで開く」）を選んでから追加してください。
             </div>
           </div>
           {isIOS() && (
@@ -2708,6 +2718,9 @@ function ManualCard() {
            Android：右上のメニュー（︙）→「ホーム画面に追加」</P>
         <Note>iPhoneでは、ブラウザとホーム画面のアプリで<b>記録の保存場所が別</b>になります。
           必ず先にホーム画面に追加し、できたアイコンから開いて設定・記録を始めてください。</Note>
+        <P>「ホーム画面に追加」が見つからないときは、共有の一覧を下までスクロールしてください。
+           Androidで「アプリをインストール」と出る場合は、それが同じ意味です。
+           LINEなどのアプリの中で開いていると追加できないので、「Safariで開く」（Androidは「ブラウザで開く」）を選んでから追加してください。</P>
         <P>そのあと、生年月日・性別・身長・お薬を飲む回数を入れて「はじめる」を押します。
            お薬を飲んでいない方は「内服薬なし」を選ぶと、きょうの画面にお薬の欄は出ません。</P>
       </Sec>
