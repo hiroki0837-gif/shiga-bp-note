@@ -49,7 +49,7 @@ const C = {
 };
 const FONT = '"Meiryo","メイリオ",sans-serif';
 const NUM = { fontVariantNumeric: "tabular-nums", fontFeatureSettings: '"tnum"' };
-const APP_VERSION = "1.2.7";
+const APP_VERSION = "1.3.0";
 
 /* 画面の見た目（背景色・書体）。書体は端末に入っているものだけを使う（通信しない方針）。
    背景色は、枠線（line）・薄い塗り（tint/tintDeep）も同系色でひとそろいにする */
@@ -339,9 +339,10 @@ const emptyTargets = () => ({ sys: "125", dia: "75" });
 const hasData = (r) => !!(r && (r.amS || r.pmS || r.amH || r.pmH || r.amI || r.pmI || r.mA || r.mN || r.mP || r.mB || hasMemo(r)));
 
 function migrate(d) {
-  const out = { schema: DATA_SCHEMA, records: {}, targets: emptyTargets(), learned: {}, visits: [], security: emptySecurity(), medPlan: emptyPlan(), exportPrefs: emptyExportPrefs(), profile: { ...emptyProfile(), id: newAnonId() }, weights: {}, theme: emptyTheme() };
+  const out = { schema: DATA_SCHEMA, records: {}, targets: emptyTargets(), learned: {}, visits: [], security: emptySecurity(), medPlan: emptyPlan(), exportPrefs: emptyExportPrefs(), profile: { ...emptyProfile(), id: newAnonId() }, weights: {}, theme: emptyTheme(), visitTimes: {} };
   if (!d || typeof d !== "object") return out;
   out.theme = { ...emptyTheme(), ...(d.theme || {}) };
+  out.visitTimes = d.visitTimes && typeof d.visitTimes === "object" ? d.visitTimes : {};
   out.targets = { ...out.targets, ...(d.targets || {}) };
   out.learned = d.learned && typeof d.learned === "object" ? d.learned : {};
   out.visits = Array.isArray(d.visits) ? d.visits : [];
@@ -2027,16 +2028,44 @@ function RangeWheel({ options, value, onChange, disabled }) {
   );
 }
 
-function VisitView({ visits, setVisits, records, targets, learned, plan, profile }) {
+/* 受診日が近いことの知らせ。「きょう」画面の一番上に出す */
+function VisitAlert({ visits, visitTimes }) {
+  const today = todayISO();
+  const next = [...visits].sort().find((v) => v >= today);
+  if (!next) return null;
+  const diff = Math.round((parseISO(next) - parseISO(today)) / 86400000);
+  // 1週間前・前日・当日にだけ知らせる
+  if (diff !== 7 && diff !== 1 && diff !== 0) return null;
+  const time = (visitTimes && visitTimes[next]) || "";
+  const when = `${fmtMD(next)}（${fmtWD(next)}）${time ? ` ${time}` : ""}`;
+  const head =
+    diff === 0 ? "きょうは受診日です" :
+    diff === 1 ? "あすは受診日です" : "受診日まで、あと1週間です";
+  return (
+    <Card style={{ borderColor: C.evening, borderLeft: `6px solid ${C.evening}` }}>
+      <div style={{ fontSize: 16, fontWeight: 800, color: C.evening }}>{head}</div>
+      <p style={{ fontSize: 13.5, color: C.ink, margin: "6px 0 0", lineHeight: 1.8, ...NUM }}>
+        {when}の予定です。{diff === 0 ? "「受診」からQRコードを出してお見せください。" : "血圧の記録を忘れずに続けましょう。"}
+      </p>
+    </Card>
+  );
+}
+
+function VisitView({ visits, setVisits, visitTimes, setVisitTimes, records, targets, learned, plan, profile }) {
   const [newVisit, setNewVisit] = useState(todayISO());
+  const [newHour, setNewHour] = useState("");
+  const [newMin, setNewMin] = useState("");
   const [range, setRange] = useState("prev");
   const [custom, setCustom] = useState(false);
   const [customFrom, setCustomFrom] = useState(addDays(todayISO(), -30));
   const [customTo, setCustomTo] = useState(todayISO());
 
   const sorted = [...visits].sort();
-  const visitDate = sorted.length ? sorted[sorted.length - 1] : todayISO();
-  const prevVisit = sorted.length > 1 ? sorted[sorted.length - 2] : null;
+  const today = todayISO();
+  const lastReg = sorted.length ? sorted[sorted.length - 1] : null;
+  // 予約（未来の受診日）を登録したまま早めに受診した場合は、きょうまでのデータで書き出す
+  const visitDate = lastReg ? (lastReg > today ? today : lastReg) : today;
+  const prevVisit = [...sorted].reverse().find((v) => v < visitDate) || null;
 
   const { from, to } = useMemo(() => {
     if (custom) return { from: customFrom, to: customTo };
@@ -2050,19 +2079,46 @@ function VisitView({ visits, setVisits, records, targets, learned, plan, profile
 
   return (
     <div className="flex flex-col gap-4">
-      <Card title="受診日" sub="受診日を登録しておくと、そこから遡って書き出せます">
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "nowrap", marginBottom: 12 }}>
+      <Card title="受診日" sub="次回の予約日と時間を入れておくと、近づいたときにお知らせします">
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
           <input type="date" value={newVisit} onChange={(e) => setNewVisit(e.target.value)}
             style={{ padding: "9px 8px", border: `1px solid ${C.line}`, borderRadius: 3, fontSize: 14, color: C.ink, minWidth: 0, flex: "1 1 auto" }} />
-          <Btn small onClick={() => newVisit && setVisits([...new Set([...visits, newVisit])])}>受診日を追加</Btn>
+          {/* 予約時間（任意）。24時間制・5分きざみ */}
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+            <select value={newHour} onChange={(e) => setNewHour(e.target.value)}
+              style={{ padding: "9px 6px", border: `1px solid ${C.line}`, borderRadius: 3, fontSize: 14, color: C.ink, background: "#fff" }}>
+              <option value="">--</option>
+              {Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0")).map((h) => <option key={h} value={h}>{h}</option>)}
+            </select>
+            <span style={{ color: C.inkSoft, fontWeight: 700 }}>時</span>
+            <select value={newMin} onChange={(e) => setNewMin(e.target.value)}
+              style={{ padding: "9px 6px", border: `1px solid ${C.line}`, borderRadius: 3, fontSize: 14, color: C.ink, background: "#fff" }}>
+              <option value="">--</option>
+              {Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, "0")).map((m) => <option key={m} value={m}>{m}</option>)}
+            </select>
+            <span style={{ color: C.inkSoft, fontWeight: 700 }}>分</span>
+          </span>
+          <Btn small onClick={() => {
+            if (!newVisit) return;
+            setVisits([...new Set([...visits, newVisit])]);
+            const t = newHour !== "" ? `${newHour}:${newMin !== "" ? newMin : "00"}` : "";
+            const nextTimes = { ...visitTimes };
+            if (t) nextTimes[newVisit] = t; else delete nextTimes[newVisit];
+            setVisitTimes(nextTimes);
+          }}>受診日を追加</Btn>
         </div>
         {sorted.length === 0
           ? <p style={{ fontSize: 13, color: C.inkSoft }}>まだ登録がありません。次回の予約日を入れておくと当日そのまま使えます。</p>
           : <div className="flex flex-wrap gap-2">
             {sorted.slice().reverse().map((v) => (
               <span key={v} style={{ display: "inline-flex", alignItems: "center", gap: 8, border: `1px solid ${C.line}`, borderRadius: 3, padding: "6px 8px 6px 12px", fontSize: 13, color: C.ink, ...NUM }}>
-                {v}
-                <button onClick={() => setVisits(visits.filter((x) => x !== v))}
+                {v}{visitTimes && visitTimes[v] ? ` ${visitTimes[v]}` : ""}
+                <button onClick={() => {
+                  setVisits(visits.filter((x) => x !== v));
+                  const nextTimes = { ...visitTimes };
+                  delete nextTimes[v];
+                  setVisitTimes(nextTimes);
+                }}
                   style={{ border: "none", background: "none", color: C.inkSoft, cursor: "pointer", fontSize: 15, lineHeight: 1 }}>×</button>
               </span>
             ))}
@@ -2614,7 +2670,9 @@ function ManualCard() {
         <P>グラフは朝と夜が別々に出ます。青が上の血圧、オレンジが下の血圧です。</P>
       </Sec>
       <Sec title="受診のとき（受診）">
-        <P>「受診」を開いて前回の受診日を登録し、期間を選ぶとQRコードが出ます。受付の端末にかざすか、診察室で画面をお見せください。</P>
+        <P>「受診」を開いて受診日を登録し、期間を選ぶとQRコードが出ます。受付の端末にかざすか、診察室で画面をお見せください。</P>
+        <P>次回の予約日と時間を入れておくと、1週間前・前日・当日に「きょう」の画面でお知らせが出ます。
+           予約日より早く受診した場合も、QRコードには実際の受診日までのデータが入ります。</P>
         <Note>期間が長いとQRコードが2枚、3枚に分かれます。番号の順に読み取ってもらってください。
           QRコードに<b>お名前や生年月日は入りません</b>。</Note>
       </Sec>
@@ -4273,6 +4331,7 @@ export default function App() {
   const [exportPrefs, setExportPrefs] = useState(emptyExportPrefs());
   const [profile, setProfile] = useState(emptyProfile());
   const [weights, setWeights] = useState({});
+  const [visitTimes, setVisitTimes] = useState({});
   const [theme, setTheme] = useState(emptyTheme());
   const [locked, setLocked] = useState(false);
 
@@ -4282,7 +4341,7 @@ export default function App() {
   const applyData = useCallback((d) => {
     setRecords(d.records); setTargets(d.targets); setLearned(d.learned); setVisits(d.visits);
     setMedPlan(d.medPlan); setExportPrefs(d.exportPrefs); setProfile(d.profile); setWeights(d.weights);
-    setTheme(d.theme || emptyTheme());
+    setTheme(d.theme || emptyTheme()); setVisitTimes(d.visitTimes || {});
   }, []);
 
   useEffect(() => {
@@ -4305,7 +4364,7 @@ export default function App() {
   }, [applyData]);
   useEffect(() => {
     if (!loaded || locked) return;
-    const data = { records, targets, learned, visits, medPlan, exportPrefs, profile, weights, theme, schema: DATA_SCHEMA };
+    const data = { records, targets, learned, visits, visitTimes, medPlan, exportPrefs, profile, weights, theme, schema: DATA_SCHEMA };
     (async () => {
       if (dataKey && security.enabled && canCrypt()) {
         const { iv, payload } = await encryptJSON(dataKey, data);
@@ -4314,7 +4373,7 @@ export default function App() {
         await store.writeRaw({ ...data, security });
       }
     })();
-  }, [records, targets, learned, visits, security, medPlan, exportPrefs, profile, weights, theme, loaded, locked, dataKey]);
+  }, [records, targets, learned, visits, visitTimes, security, medPlan, exportPrefs, profile, weights, theme, loaded, locked, dataKey]);
 
   const openSettings = () => {
     snap.current = { targets, medPlan, profile, exportPrefs, security, weights, theme };
@@ -4525,6 +4584,7 @@ export default function App() {
 
         {mode === "patient" && !settings && tab === "today" && (
           <div className="flex flex-col gap-4">
+            <VisitAlert visits={visits} visitTimes={visitTimes} />
             <SignPanel signs={signs} />
             <TodayView date={date} setDate={setDate} rec={rec} update={update} targets={targets} plan={medPlan}
               weights={weights} setWeights={setWeights} profile={profile} />
@@ -4561,7 +4621,8 @@ export default function App() {
         )}
 
         {mode === "patient" && !settings && tab === "visit" && (
-          <VisitView visits={visits} setVisits={setVisits} records={records} targets={targets} learned={learned} plan={medPlan} profile={profile} />
+          <VisitView visits={visits} setVisits={setVisits} visitTimes={visitTimes} setVisitTimes={setVisitTimes}
+            records={records} targets={targets} learned={learned} plan={medPlan} profile={profile} />
         )}
 
         {mode === "patient" && !settings && tab === "learn" && (
