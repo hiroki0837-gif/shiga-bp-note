@@ -49,7 +49,7 @@ const C = {
 };
 const FONT = '"Meiryo","メイリオ",sans-serif';
 const NUM = { fontVariantNumeric: "tabular-nums", fontFeatureSettings: '"tnum"' };
-const APP_VERSION = "1.4.0";
+const APP_VERSION = "1.4.1";
 
 /* 画面の見た目（背景色・書体）。書体は端末に入っているものだけを使う（通信しない方針）。
    背景色は、枠線（line）・薄い塗り（tint/tintDeep）も同系色でひとそろいにする */
@@ -2599,7 +2599,10 @@ function SetupScreen({ profile, setProfile, medPlan, setMedPlan, onDone }) {
           <div style={{ background: C.tint, border: `1px solid ${C.line}`, borderRadius: 3, padding: "10px 12px", marginBottom: 8 }}>
             <div style={{ fontSize: 13, fontWeight: 800, color: C.ink }}>iPhone</div>
             <div style={{ fontSize: 13, color: C.ink, lineHeight: 1.9 }}>
-              画面下の<b>共有ボタン（□に↑）</b> → <b>「ホーム画面に追加」</b>
+              画面下のアドレスバー右端の<b>「…」</b> → <b>「共有」</b> → <b>「ホーム画面に追加」</b>
+            </div>
+            <div style={{ fontSize: 12, color: C.inkSoft, lineHeight: 1.8, marginTop: 4 }}>
+              「…」がない場合は、共有ボタン（□に↑）→「ホーム画面に追加」
             </div>
           </div>
           <div style={{ background: C.tint, border: `1px solid ${C.line}`, borderRadius: 3, padding: "10px 12px", marginBottom: 12 }}>
@@ -2700,7 +2703,8 @@ function ManualCard() {
     <Card title="使い方" sub="項目を押すと説明が開きます">
       <Sec title="はじめる・ホーム画面に追加">
         <P>はじめて開くと「ホーム画面に追加」の案内が出ます。画面の説明にそって追加してください。</P>
-        <P>iPhone：画面下の共有ボタン（□に↑）→「ホーム画面に追加」<br />
+        <P>iPhone：画面下のアドレスバー右端の「…」→「共有」→「ホーム画面に追加」
+           （「…」がない場合は、共有ボタン（□に↑）から）<br />
            Android：右上のメニュー（︙）→「ホーム画面に追加」</P>
         <Note>iPhoneでは、ブラウザとホーム画面のアプリで<b>記録の保存場所が別</b>になります。
           必ず先にホーム画面に追加し、できたアイコンから開いて設定・記録を始めてください。</Note>
