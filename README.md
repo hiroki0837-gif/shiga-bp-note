@@ -1,4 +1,4 @@
-# しが血圧ノート
+# 血圧ノート＠しが
 
 家庭で測った血圧を記録し、受診時にQRコードで医療機関に渡せる手帳アプリです。
 記録は端末の中だけに保存され、外部に送信されません。
@@ -13,7 +13,7 @@
 | --- | --- |
 | https://shiga-bp-note.vercel.app/ | 患者用アプリ（記録・教材・受診用QR・医療者モード） |
 | https://shiga-bp-note.vercel.app/?kiosk=1 | 患者用アプリを受付端末として起動 |
-| https://shiga-bp-note.vercel.app/terminal.html | 受付端末（しが血圧ノートと心不全手帳の両方のQRを読み取り） |
+| https://shiga-bp-note.vercel.app/terminal.html | 受付端末（血圧ノート＠しがと心不全手帳の両方のQRを読み取り） |
 | https://shiga-bp-note.vercel.app/heart-failure.html | 心不全手帳（開発中・未配布） |
 
 ## 動かす

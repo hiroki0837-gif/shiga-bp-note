@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>しが血圧ノート 運用の手引き（医療者向け）</title>
+<title>血圧ノート＠しが 運用の手引き（医療者向け）</title>
 <style>
   :root { --blue:#54A9F0; --blue-deep:#1B77CB; --pale:#F1FAFF; --ink:#2B3646; --sub:#46525F; --line:#D9E9F6; --good:#33A165; --bad:#CC6455; }
   * { box-sizing:border-box; }
@@ -37,14 +37,14 @@
 <div class="bar"><button onclick="window.print()">印刷 / PDFで保存</button></div>
 
 <section class="sheet">
-  <h1>しが血圧ノート　運用の手引き</h1>
+  <h1>血圧ノート＠しが　運用の手引き</h1>
   <p class="sub">医療者・受付スタッフ向け　／　滋賀医科大学医学部附属病院 循環器内科</p>
 
   <h2>1. 画面の構成</h2>
   <table>
     <tr><th>URL</th><th>用途</th><th>置く場所</th></tr>
     <tr><td><code>https&#58;//shiga-bp-note.vercel.app/</code></td><td>患者用アプリ（医療者モードあり）</td><td>患者さんのスマートフォン、診察室のiPad</td></tr>
-    <tr><td><code>https&#58;//shiga-bp-note.vercel.app/terminal.html</code></td><td>受付端末。しが血圧ノートと心不全手帳の両方に対応</td><td>外来受付、血圧計の横</td></tr>
+    <tr><td><code>https&#58;//shiga-bp-note.vercel.app/terminal.html</code></td><td>受付端末。血圧ノート＠しがと心不全手帳の両方に対応</td><td>外来受付、血圧計の横</td></tr>
     <tr><td><code>…/?kiosk=1</code></td><td>患者用アプリを受付端末として起動（予備）</td><td>受付端末が使えないとき</td></tr>
   </table>
 
@@ -150,7 +150,7 @@
     <tr><th>入っているもの</th><td>手帳番号（乱数10桁）、年齢、性別、測定値、不整脈マーク、服薬、記録時刻、目標値、教材の進み具合</td></tr>
     <tr><th>入っていないもの</th><td>氏名、生年月日、カルテ番号、メモの内容、体重（血圧ノートの月1回の体重）</td></tr>
   </table>
-  <p>先頭の1桁が手帳の種類を表します（8＝しが血圧ノート、9＝心不全手帳）。受付端末はこれを見て自動で振り分けるため、患者さんが選ぶ必要はありません。</p>
+  <p>先頭の1桁が手帳の種類を表します（8＝血圧ノート＠しが、9＝心不全手帳）。受付端末はこれを見て自動で振り分けるため、患者さんが選ぶ必要はありません。</p>
   <div class="warn">
     <p><b>手帳番号とカルテ番号の対応表は、施設側で作ることになります。</b>この対応表は事実上の個人情報です。診療録と同等の管理をしてください。</p>
     <p>QRを印刷した紙、受付端末に貯まるCSVも同様です。保管場所と廃棄の方法を先に決めておいてください。</p>

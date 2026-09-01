@@ -5,7 +5,7 @@ import {
 } from "recharts";
 
 /* ============================================================
-   しが血圧ノート（簡易版）
+   血圧ノート＠しが（簡易版）
    きょう入力 → まとめ（表・グラフ・CSV） → 教材 → 設定
    記録は端末内のみに保存されます。
    ============================================================ */
@@ -49,7 +49,7 @@ const C = {
 };
 const FONT = '"Meiryo","メイリオ",sans-serif';
 const NUM = { fontVariantNumeric: "tabular-nums", fontFeatureSettings: '"tnum"' };
-const APP_VERSION = "1.4.2";
+const APP_VERSION = "1.4.3";
 
 /* 画面の見た目（背景色・書体）。書体は端末に入っているものだけを使う（通信しない方針）。
    背景色は、枠線（line）・薄い塗り（tint/tintDeep）も同系色でひとそろいにする */
@@ -465,7 +465,7 @@ const TOPICS = [
 const APP_BUILD = 100;
 const SEX_CODE = { female: 1, male: 2, na: 3 };
 const SEX_TEXT = { 1: "女性", 2: "男性", 3: "回答なし" };
-const APP = "8";          // 8=しが血圧ノート、9=心不全手帳
+const APP = "8";          // 8=血圧ノート＠しが、9=心不全手帳
 const FMT = "6";
 const RECS_PER_CHUNK = 40;
 const LEARN_LEN = TOPICS.length;
@@ -2580,7 +2580,7 @@ function SetupScreen({ profile, setProfile, medPlan, setMedPlan, onDone }) {
 
   const head = (sub) => (
     <div style={{ textAlign: "center", marginBottom: 24 }}>
-      <div style={{ fontSize: 22, fontWeight: 800, color: C.ink, letterSpacing: "0.06em" }}>しが血圧ノート</div>
+      <div style={{ fontSize: 22, fontWeight: 800, color: C.ink, letterSpacing: "0.06em" }}>血圧ノート＠しが</div>
       <div style={{ fontSize: 12.5, color: C.inkSoft, marginTop: 6, lineHeight: 1.8 }}>{sub}</div>
     </div>
   );
@@ -2912,7 +2912,7 @@ function ExportCard({ records, plan, weights, targets, preview, setPreview, pref
 
       <div className="flex gap-2 flex-wrap">
         <Btn small disabled={!tbl.rows.length}
-          onClick={() => downloadCSV(`しが血圧ノート_${dates[0]}_${dates[dates.length - 1]}.csv`,
+          onClick={() => downloadCSV(`血圧ノート＠しが_${dates[0]}_${dates[dates.length - 1]}.csv`,
             [tbl.head.join(","), ...tbl.rows.map((r) => r.join(","))].join("\r\n"))}>
           CSVで保存
         </Btn>
@@ -3138,7 +3138,7 @@ async function bioRegister() {
   const cred = await navigator.credentials.create({
     publicKey: {
       challenge: randBytes(32),
-      rp: { name: "しが血圧ノート" },
+      rp: { name: "血圧ノート＠しが" },
       user: { id: randBytes(16), name: "patient", displayName: "この端末の利用者" },
       pubKeyCredParams: [{ type: "public-key", alg: -7 }, { type: "public-key", alg: -257 }],
       authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required", residentKey: "preferred" },
@@ -3234,7 +3234,7 @@ function LockScreen({ security, onUnlock, onWipe, unlockWith, unlockWithBio }) {
   return (
     <div style={{ maxWidth: 420, margin: "0 auto", padding: "40px 18px 60px" }}>
       <div style={{ textAlign: "center", marginBottom: 26 }}>
-        <div style={{ fontSize: 22, fontWeight: 800, color: C.ink, letterSpacing: "0.06em" }}>しが血圧ノート</div>
+        <div style={{ fontSize: 22, fontWeight: 800, color: C.ink, letterSpacing: "0.06em" }}>血圧ノート＠しが</div>
         <div style={{ fontSize: 12, color: C.inkSoft, marginTop: 4 }}>ロックを解除してください</div>
       </div>
 
@@ -4125,7 +4125,7 @@ function ClinicianView() {
           </Card>
 
           <div className="no-print flex gap-2 justify-end flex-wrap">
-            <Btn filled={false} onClick={() => downloadCSV(`しが血圧ノート_${meta.startDate}_${dates[dates.length - 1]}.csv`, buildCSV(dates, merged))}>
+            <Btn filled={false} onClick={() => downloadCSV(`血圧ノート＠しが_${meta.startDate}_${dates[dates.length - 1]}.csv`, buildCSV(dates, merged))}>
               CSVで保存
             </Btn>
             <Btn onClick={() => window.print()}>印刷 / PDFで保存</Btn>
@@ -4282,7 +4282,7 @@ function KioskView({ onExit }) {
       {meta && st && (
         <div style={{ position: "absolute", left: -99999, top: 0, width: 718 }} className="kiosk-print">
           <div style={{ padding: "0 0 8px", borderBottom: `2px solid ${C.ink}`, marginBottom: 12 }}>
-            <div style={{ fontSize: 18, fontWeight: 800, color: C.ink }}>しが血圧ノート　受診用記録</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: C.ink }}>血圧ノート＠しが　受診用記録</div>
             <div style={{ fontSize: 12.5, color: C.inkSoft, marginTop: 4, ...NUM }}>
               {meta.startDate} 〜 {dates[dates.length - 1]}（{meta.days}日間・記録 {st.days}日）
               {meta.demo && meta.demo.age != null ? `　${meta.demo.age}歳` : ""}
@@ -4611,7 +4611,7 @@ export default function App() {
       <header className="no-print" style={{ background: "#FFFFFF", borderBottom: `3px solid #54A9F0`, padding: "16px 18px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
           <div>
-            <div style={{ fontSize: 21, fontWeight: 800, letterSpacing: "0.06em", color: C.ink }}>しが血圧ノート</div>
+            <div style={{ fontSize: 21, fontWeight: 800, letterSpacing: "0.06em", color: C.ink }}>血圧ノート＠しが</div>
             <div style={{ fontSize: 11.5, letterSpacing: "0.12em", color: C.inkSoft }}>毎日の記録と高血圧の知識</div>
           </div>
           {/* 狭い画面では折り返して2段目になる。その際は切り替えを左端・設定を右端に離す
@@ -4959,7 +4959,7 @@ export default function App() {
         )}
 
         <footer className="no-print" style={{ textAlign: "center", padding: "28px 0 4px", fontSize: 11.5, color: C.inkSoft, ...NUM }}>
-          しが血圧ノート v{APP_VERSION}
+          血圧ノート＠しが v{APP_VERSION}
         </footer>
       </main>
     </div>

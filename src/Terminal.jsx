@@ -4,7 +4,7 @@ import {
 } from "recharts";
 
 /* ============================================================
-   受付端末（しが血圧ノート／心不全手帳 共通）
+   受付端末（血圧ノート＠しが／心不全手帳 共通）
    患者さんが自分でQRをかざす → 読み取り → 自動で印刷
    ============================================================ */
 
@@ -659,7 +659,7 @@ function CameraScanner({ onCode, onClose }) {
 /* ---------- 手帳ごとのQR形式 ---------- */
 const APPS = {
   "8": {
-    name: "しが血圧ノート", kind: "bp", learn: 7,
+    name: "血圧ノート＠しが", kind: "bp", learn: 7,
     specs: {
       "1": { build: 3, tg: 6, aid: 0, demo: 0, learn: 7, plan: 0, med: 1, time: false },
       "2": { build: 3, tg: 6, aid: 0, demo: 0, learn: 7, plan: 0, med: 1, time: true },
@@ -1601,7 +1601,7 @@ export default function App() {
                 {conf.reader === "scanner"
                   ? "スマートフォンの画面を、読み取り機にかざしてください"
                   : "スマートフォンの画面を、下のカメラに向けてください"}<br />
-                しが血圧ノート・心不全手帳のどちらでも読み取れます
+                血圧ノート＠しが・心不全手帳のどちらでも読み取れます
               </p>
               {meta && (
                 <div style={{ textAlign: "center", marginTop: 16 }}>
