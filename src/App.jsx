@@ -2054,6 +2054,22 @@ function VisitAlert({ visits, visitTimes }) {
   );
 }
 
+/* 毎月1日の知らせ。「きょう」画面の受診アラートの下に出す */
+function MonthFirstAlert({ weights }) {
+  const t = todayISO();
+  if (parseISO(t).getDate() !== 1) return null;
+  // その月の体重を入れ終わっていたら出さない
+  if (weights && weights[ymOf(t)]) return null;
+  return (
+    <Card style={{ borderColor: C.evening, borderLeft: `6px solid ${C.evening}` }}>
+      <div style={{ fontSize: 16, fontWeight: 800, color: C.evening }}>きょうは月はじめのチェックの日です</div>
+      <p style={{ fontSize: 13.5, color: C.ink, margin: "6px 0 0", lineHeight: 1.8 }}>
+        <b>体重</b>をはかって、下の「今月の体重」に入れましょう。月に1回の体重チェックは、体の変化に早く気づく手がかりになります。
+      </p>
+    </Card>
+  );
+}
+
 function VisitView({ visits, setVisits, visitTimes, setVisitTimes, records, targets, learned, plan, profile }) {
   const [newVisit, setNewVisit] = useState(todayISO());
   const [newHour, setNewHour] = useState("");
@@ -4667,6 +4683,7 @@ export default function App() {
         {mode === "patient" && !settings && tab === "today" && (
           <div className="flex flex-col gap-4">
             <VisitAlert visits={visits} visitTimes={visitTimes} />
+            <MonthFirstAlert weights={weights} />
             <SignPanel signs={signs} />
             <TodayView date={date} setDate={setDate} rec={rec} update={update} targets={targets} plan={medPlan}
               weights={weights} setWeights={setWeights} profile={profile} />
