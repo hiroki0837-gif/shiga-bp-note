@@ -4768,7 +4768,6 @@ export default function App() {
         {mode === "patient" && !settings && tab === "sum" && (
           <div className="flex flex-col gap-4">
             <GoalCard ldl={ldl} hba1c={hba1c} records={records} targets={targets} />
-            <FeedbackCard dates={dates} records={records} targets={targets} plan={medPlan} />
             <LabCard title="LDLコレステロール" sub="採血の結果を記録します。目標は 55mg/dL 未満です"
               unit="mg/dL" target={55} targetLabel="55" step="1" values={ldl} setValues={setLdl}
               yDomain={[0, (m) => Math.max(100, Math.ceil((m + 10) / 20) * 20)]} />
