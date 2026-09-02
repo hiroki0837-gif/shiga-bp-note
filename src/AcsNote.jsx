@@ -931,20 +931,22 @@ function GoalCard({ ldl, hba1c, records, targets }) {
     msg = (missing.length ? "記録のある目標はすべて達成しています。" : "3つの目標をすべて達成しています。")
       + "すばらしいです！ この調子で続けましょう。";
   } else if (okN > 0) {
-    tone = C.morning;
-    msg = "お薬をきちんと続けて、次の受診のときに主治医と相談しましょう。";
+    // 一部達成のときはメッセージ枠を出さない（達成状況の行だけで伝わるため）
+    msg = null;
   } else {
     tone = C.alert;
     msg = "目標達成はこれからが本番です。お薬を続けながら、生活の工夫を少しずつ。次の受診のときに主治医と相談しましょう。";
   }
-  if (known.length && missing.length) {
+  if (msg && known.length && missing.length) {
     msg += `（${missing.join("・")}はまだ記録がありません）`;
   }
   return (
     <Card title="管理目標の達成状況" sub="LDL・HbA1cは直近の採血、血圧は直近2週間の平均で見ています">
-      <div style={{ borderLeft: `5px solid ${tone}`, background: tone === C.alert ? C.alertBg : C.tint, borderRadius: 3, padding: "10px 12px", marginBottom: 14 }}>
-        <p style={{ fontSize: 13.5, fontWeight: 700, color: C.ink, margin: 0, lineHeight: 1.9 }}>{msg}</p>
-      </div>
+      {msg && (
+        <div style={{ borderLeft: `5px solid ${tone}`, background: tone === C.alert ? C.alertBg : C.tint, borderRadius: 3, padding: "10px 12px", marginBottom: 14 }}>
+          <p style={{ fontSize: 13.5, fontWeight: 700, color: C.ink, margin: 0, lineHeight: 1.9 }}>{msg}</p>
+        </div>
+      )}
       <div className="flex flex-col gap-2">
         {items.map((i) => (
           <div key={i.name} className="flex items-center gap-2" style={{ border: `1px solid ${C.line}`, borderRadius: 3, padding: "9px 12px" }}>
