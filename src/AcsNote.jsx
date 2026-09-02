@@ -2889,8 +2889,10 @@ const EXPORT_COLS = [
   { k: "memo", label: "メモ", head: () => ["メモの内容", "メモ"],
     get: (r) => [(r.tags || []).map((k) => (MEMO_TAGS.find(([x]) => x === k) || [k, k])[1]).join(" "), (r.memo || "").replace(/[",\r\n]/g, " ")] },
   { k: "med", label: "服薬", head: (plan) => planList(plan).map(([, jp]) => `服薬${jp}`), get: (r, plan) => planList(plan).map(([k]) => medCsv(r[k])) },
+  { k: "ldl", label: "LDLコレステロール", head: () => ["LDL(mg/dL)"], get: (r, plan, d, ctx) => [(ctx && ctx.ldl && ctx.ldl[d]) || ""] },
+  { k: "hba1c", label: "HbA1c", head: () => ["HbA1c(%)"], get: (r, plan, d, ctx) => [(ctx && ctx.hba1c && ctx.hba1c[d]) || ""] },
 ];
-const DEFAULT_COLS = { memo: true, w: true, amBP: true, amHR: true, amT: false, pmBP: true, pmHR: true, pmT: false, med: true };
+const DEFAULT_COLS = { memo: true, w: true, amBP: true, amHR: true, amT: false, pmBP: true, pmHR: true, pmT: false, med: true, ldl: true, hba1c: true };
 
 const emptyExportPrefs = () => ({ range: "4w", from: "", to: "", cols: DEFAULT_COLS, withEmpty: false, summary: true, charts: true, table: true });
 
@@ -2901,13 +2903,15 @@ function exportTable(dates, records, plan, cols, withEmpty, ctx) {
   const seen = {};
   for (const d of dates) {
     const r = records[d];
-    if (!withEmpty && !hasData(r)) continue;
+    // 採血値（LDL・HbA1c）だけの日も1行として出す
+    const hasLab = ctx && ((ctx.ldl && ctx.ldl[d]) || (ctx.hba1c && ctx.hba1c[d]));
+    if (!withEmpty && !hasData(r) && !hasLab) continue;
     rows.push([d, fmtWD(d), ...active.flatMap((c) => c.get(r || emptyRec(), plan, d, ctx, seen))]);
   }
   return { head, rows };
 }
 
-function ExportCard({ records, plan, weights, targets, preview, setPreview, prefs, onSavePrefs }) {
+function ExportCard({ records, plan, weights, ldl, hba1c, targets, preview, setPreview, prefs, onSavePrefs }) {
   const [range, setRange] = useState(prefs.range || "4w");
   const [from, setFrom] = useState(prefs.from || addDays(todayISO(), -27));
   const [to, setTo] = useState(prefs.to || todayISO());
@@ -2934,7 +2938,7 @@ function ExportCard({ records, plan, weights, targets, preview, setPreview, pref
     return Array.from({ length: w * 7 }, (_, i) => addDays(start, i));
   }, [range, from, to, records]);
 
-  const tbl = exportTable(dates, records, plan, cols, withEmpty, { weights });
+  const tbl = exportTable(dates, records, plan, cols, withEmpty, { weights, ldl, hba1c });
   const pill = (on) => ({
     padding: "9px 14px", borderRadius: 3, fontSize: 13, fontWeight: 700, cursor: "pointer",
     border: `1.5px solid ${on ? C.ink : C.line}`, background: on ? C.ink : "#fff", color: on ? "#fff" : C.inkSoft,
@@ -3002,7 +3006,7 @@ function ExportCard({ records, plan, weights, targets, preview, setPreview, pref
             [tbl.head.join(","), ...tbl.rows.map((r) => r.join(","))].join("\r\n"))}>
           CSVで保存
         </Btn>
-        <Btn small filled={false} disabled={!tbl.rows.length} onClick={() => setPreview(preview ? null : { tbl, dates, records, plan, targets, cols, weights, showSummary, showCharts, showTable })}>
+        <Btn small filled={false} disabled={!tbl.rows.length} onClick={() => setPreview(preview ? null : { tbl, dates, records, plan, targets, cols, weights, ldl, hba1c, showSummary, showCharts, showTable })}>
           {preview ? "印刷プレビューを閉じる" : "印刷プレビュー"}
         </Btn>
       </div>
@@ -3046,7 +3050,40 @@ function ExportSummary({ dates, records, targets, plan }) {
 /* 書き出しの印刷用の表。以前は「1日=1行・項目=列」だったが、項目を全部選ぶと列が
    増えすぎて紙の右で切れた。医療者モードの印刷と同じ「週ごと・項目=行」の形にすれば、
    列数は曜日ぶんで固定なので何項目選んでもはみ出さない。メモは表の下に日付つきで並べる */
-function ExportWeekTables({ dates, records, plan, cols, weights }) {
+/* 書き出しの印刷用：採血値の推移グラフ（期間内の記録があるときだけ出す） */
+function PrintLabChart({ title, unit, target, targetLabel, values, from, to, yDomain }) {
+  const entries = Object.keys(values || {}).filter((k) => values[k] && k >= from && k <= to).sort();
+  if (!entries.length) return null;
+  const data = entries.map((k) => ({ d: fmtMD(k), 値: Number(values[k]) }));
+  const last = Number(values[entries[entries.length - 1]]);
+  return (
+    <div className="avoid-break" style={{ marginBottom: 16 }}>
+      <div style={{ fontSize: 13.5, fontWeight: 800, color: C.ink, marginBottom: 6, borderLeft: `4px solid ${C.evening}`, paddingLeft: 8 }}>
+        {title}　<span style={{ fontWeight: 700, color: last < target ? C.good : C.alert }}>直近 {last}{unit}（目標 {targetLabel}{unit} 未満）</span>
+      </div>
+      {data.length >= 2 ? (
+        <div className="chart-h" style={{ height: 160 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={data} margin={{ top: 12, right: 54, bottom: 0, left: -12 }}>
+              <CartesianGrid stroke={C.line} strokeDasharray="2 4" />
+              <XAxis dataKey="d" tick={{ stroke: C.inkSoft, fontSize: 11 }} interval="preserveStartEnd" height={24} />
+              <YAxis domain={yDomain} tick={{ stroke: C.inkSoft, fontSize: 11 }} />
+              <ReferenceLine y={target} stroke={C.good} strokeDasharray="6 4" strokeWidth={1.8}
+                label={{ value: `目標 ${targetLabel}`, fontSize: 10.5, fontWeight: 700, fill: C.good, position: "right", offset: 5 }} />
+              <Line dataKey="値" stroke={C.evening} strokeWidth={2.4} dot={dotCircle(C.evening)} connectNulls={false} isAnimationActive={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      ) : (
+        <p style={{ fontSize: 12.5, color: C.inkSoft, margin: 0, ...NUM }}>
+          {entries[0]}：{Number(values[entries[0]])}{unit}（この期間の記録は1件です）
+        </p>
+      )}
+    </div>
+  );
+}
+
+function ExportWeekTables({ dates, records, plan, cols, weights, ldl, hba1c }) {
   const th = { border: `1px solid ${C.line}`, padding: "6px 4px", fontSize: 11.5, fontWeight: 700, color: C.ink, background: C.tint, whiteSpace: "nowrap" };
   const td = { border: `1px solid ${C.line}`, padding: "6px 2px", fontSize: 12.5, textAlign: "center", color: C.ink, whiteSpace: "nowrap", overflow: "hidden", ...NUM };
   const avgTd = { ...td, background: C.tintDeep, fontWeight: 800, borderLeft: `2px solid ${C.inkSoft}` };
@@ -3087,6 +3124,8 @@ function ExportWeekTables({ dates, records, plan, cols, weights }) {
         if (cols.amT) rows.push(["時刻 朝", (r) => (r ? slotText(r.amT) : ""), C.inkSoft, ""]);
         if (cols.pmT) rows.push(["時刻 夜", (r) => (r ? slotText(r.pmT) : ""), C.inkSoft, ""]);
         if (cols.w) rows.push(["体重", (r, d) => (wLabel[d] ? `${wLabel[d]}kg` : ""), C.ink, ""]);
+        if (cols.ldl) rows.push(["LDL", (r, d) => (ldl && ldl[d] ? String(ldl[d]) : ""), C.ink, ""]);
+        if (cols.hba1c) rows.push(["HbA1c", (r, d) => (hba1c && hba1c[d] ? String(hba1c[d]) : ""), C.ink, ""]);
         const memoDays = cols.memo ? w.filter((d) => inR(d) && hasMemo(records[d])) : [];
         return (
           <div key={i} className="avoid-break">
@@ -3171,7 +3210,7 @@ function ExportWeekTables({ dates, records, plan, cols, weights }) {
 }
 
 function ExportPreview({ data, onClose }) {
-  const { tbl, dates, records, plan, targets, cols, weights, showSummary, showCharts, showTable } = data;
+  const { tbl, dates, records, plan, targets, cols, weights, ldl, hba1c, showSummary, showCharts, showTable } = data;
   return (
     <Card title="印刷プレビュー" sub={`${dates[0]} 〜 ${dates[dates.length - 1]}（記録 ${tbl.rows.length}日）`}>
       {showSummary && records && (
@@ -3186,8 +3225,19 @@ function ExportPreview({ data, onClose }) {
         </div>
       )}
 
+      {showCharts && (cols || DEFAULT_COLS).ldl && (
+        <PrintLabChart title="LDLコレステロール（採血）" unit="mg/dL" target={55} targetLabel="55"
+          values={ldl} from={dates[0]} to={dates[dates.length - 1]}
+          yDomain={[0, (m) => Math.max(100, Math.ceil((m + 10) / 20) * 20)]} />
+      )}
+      {showCharts && (cols || DEFAULT_COLS).hba1c && (
+        <PrintLabChart title="HbA1c（採血）" unit="%" target={7.0} targetLabel="7.0"
+          values={hba1c} from={dates[0]} to={dates[dates.length - 1]}
+          yDomain={[(m) => Math.max(4, Math.floor(m - 2)), (m) => Math.max(8, Math.ceil(m + 1))]} />
+      )}
+
       {showTable !== false && (
-        <ExportWeekTables dates={dates} records={records} plan={plan} cols={cols || DEFAULT_COLS} weights={weights} />
+        <ExportWeekTables dates={dates} records={records} plan={plan} cols={cols || DEFAULT_COLS} weights={weights} ldl={ldl} hba1c={hba1c} />
       )}
       <div className="no-print flex gap-2" style={{ marginTop: 14 }}>
         <Btn small onClick={() => window.print()}>印刷 / PDFで保存</Btn>
@@ -5004,7 +5054,7 @@ export default function App() {
               </p>
             </Card>
 
-            <ExportCard records={records} plan={medPlan} weights={weights} targets={targets} preview={exportPreview} setPreview={setExportPreview}
+            <ExportCard records={records} plan={medPlan} weights={weights} ldl={ldl} hba1c={hba1c} targets={targets} preview={exportPreview} setPreview={setExportPreview}
               prefs={exportPrefs} onSavePrefs={setExportPrefs} />
 
             <Card title="データ" sub="記録はこの端末の中だけに保存されます">
