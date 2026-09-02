@@ -933,10 +933,8 @@ function LatestLabCard({ title, unit, target, targetLabel, step, values, setValu
   );
 }
 
-/* ---------- 採血値の記録カード（LDL・HbA1cで共用。採血のたびに入れる） ---------- */
-function LabCard({ title, sub, unit, target, targetLabel, step, values, setValues, yDomain }) {
-  const [d, setD] = useState(todayISO());
-  const [v, setV] = useState("");
+/* ---------- 採血値の推移カード（LDL・HbA1cで共用。入力は「きょう」から） ---------- */
+function LabCard({ title, sub, unit, target, targetLabel, values, setValues, yDomain }) {
   const entries = Object.keys(values).filter((k) => values[k]).sort();
   const data = entries.map((k) => ({ d: fmtMD(k), 値: Number(values[k]) }));
   const last = entries.length ? Number(values[entries[entries.length - 1]]) : null;
@@ -971,12 +969,11 @@ function LabCard({ title, sub, unit, target, targetLabel, step, values, setValue
           </div>
         </div>
       )}
-      <div className="no-print" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
-        <input type="date" value={d} max={todayISO()} onChange={(e) => setD(e.target.value)}
-          style={{ padding: "9px 8px", border: `1px solid ${C.line}`, borderRadius: 3, fontSize: 14, color: C.ink, minWidth: 0 }} />
-        <NumInput value={v} onChange={setV} placeholder="--" unit={unit} width={110} step={step} />
-        <Btn small onClick={() => { if (d && v) { setValues({ ...values, [d]: v }); setV(""); } }}>記録する</Btn>
-      </div>
+      {entries.length === 0 && (
+        <p style={{ fontSize: 13, color: C.inkSoft, lineHeight: 1.8, margin: 0 }}>
+          まだ記録がありません。「きょう」の画面から採血の結果を入れると、ここに推移が出ます。
+        </p>
+      )}
       {entries.length > 0 && (
         <div className="flex flex-col gap-1" style={{ marginTop: 12 }}>
           {entries.slice().reverse().slice(0, 12).map((k) => {
@@ -994,9 +991,11 @@ function LabCard({ title, sub, unit, target, targetLabel, step, values, setValue
           })}
         </div>
       )}
-      <p style={{ fontSize: 12, color: C.inkSoft, lineHeight: 1.8, marginTop: 12 }}>
-        受診時の血液検査の結果を入れてください。この値は受診用QRコードには入りません。
-      </p>
+      {entries.length > 0 && (
+        <p style={{ fontSize: 12, color: C.inkSoft, lineHeight: 1.8, marginTop: 12 }}>
+          入力は「きょう」の画面からできます。この値は受診用QRコードには入りません。
+        </p>
+      )}
     </Card>
   );
 }
