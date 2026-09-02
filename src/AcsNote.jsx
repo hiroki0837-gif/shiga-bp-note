@@ -380,7 +380,9 @@ const TOPICS = [
   { id: "b1", title: "あなたの病気は「急性冠症候群（ACS）」", body: [
     { t: "p", v: "急性冠症候群（ACS）は、心臓に酸素や栄養を送る血管（冠動脈）が狭くなったり詰まったりして起こる、命にかかわる病気です。心筋梗塞や不安定狭心症がこれにあたります。" },
     { t: "p", v: "おもな原因は、LDL（悪玉）コレステロールを含む「プラーク」というかたまりが血管の壁にでき、それが破れて血管をふさぐことです。" },
+    { t: "fig", v: "vessel" },
     { t: "p", v: "冠動脈の血流が途絶えると心臓の筋肉がこわれ、心臓の働きが悪くなって心不全になることもあります。今すぐの治療と、そのあとの再発予防がとても大切です。" },
+    { t: "fig", v: "stages" },
   ] },
   { id: "b2", title: "発症から1年以内がいちばん再発しやすい", body: [
     { t: "p", v: "ACSは、特に発症後1年間の再発率が高いことが知られています。ステント治療がうまくいっても、それで終わりではありません。治療後のこれから1年が「治療の本番」です。" },
@@ -391,6 +393,7 @@ const TOPICS = [
     { t: "p", v: "血液中のLDLコレステロールが高いままだと、新たなプラークができたり破れたりして、再発の危険が高まります。" },
     { t: "p", v: "ACSの患者さんでLDLを早く55mg/dL未満まで下げられた場合、そうでない場合にくらべて、死亡や心血管イベントの危険が明らかに低かったという海外の報告があります。" },
     { t: "p", v: "カテーテル治療は狭くなった場所を治しますが、カテーテルをした血管「以外」の場所を守るのは、LDLコレステロールの管理です。" },
+    { t: "fig", v: "protect" },
     { t: "note", v: "健診の基準値（65〜139mg/dLなど）は健康な方を対象にした目安です。ACSの患者さんは、それよりはるかに低い 55mg/dL未満 を保つことがすすめられています。" },
   ] },
   { id: "b4", title: "LDLを下げる中心は「薬」", body: [
@@ -797,10 +800,91 @@ function NumInput({ value, onChange, placeholder, unit, width = 84, step = "1" }
     </span>
   );
 }
+/* 教材の図（自前のSVG。通信・依存なしの方針を守る） */
+function TopicFig({ id }) {
+  const wrap = { margin: "0 0 16px", textAlign: "center" };
+  const cap = { fontSize: 12, color: C.inkSoft, marginTop: 6, lineHeight: 1.7 };
+  if (id === "vessel") {
+    return (
+      <div style={wrap} className="avoid-break">
+        <svg viewBox="0 0 340 224" style={{ width: "100%", maxWidth: 400 }} aria-hidden="true">
+          <text x="170" y="16" textAnchor="middle" fontSize="13" fontWeight="700" fill={C.ink}>正常な冠動脈</text>
+          <rect x="28" y="26" width="256" height="40" rx="20" fill="#FADBD3" stroke="#C0392B" strokeWidth="3" />
+          {[52, 84, 116, 148, 180, 212, 244].map((x, i) => (
+            <circle key={i} cx={x} cy={46} r="4.5" fill="#C0392B" />
+          ))}
+          <polygon points="288,34 288,58 312,46" fill="#C0392B" />
+          <text x="300" y="28" textAnchor="middle" fontSize="11" fontWeight="700" fill="#C0392B">血流</text>
+
+          <path d="M170 76 v20" stroke="#C0392B" strokeWidth="5" />
+          <polygon points="162,96 178,96 170,110" fill="#C0392B" />
+          <text x="182" y="98" fontSize="12" fontWeight="700" fill="#C0392B">プラークが破れる</text>
+
+          <text x="170" y="132" textAnchor="middle" fontSize="13" fontWeight="700" fill="#C0392B">心筋梗塞の起こった冠動脈</text>
+          <rect x="28" y="142" width="256" height="40" rx="20" fill="#FADBD3" stroke="#C0392B" strokeWidth="3" />
+          <path d="M118 142 q52 26 104 0 z" fill="#F2C14E" stroke="#D9A521" strokeWidth="1.5" />
+          <path d="M118 182 q52 -26 104 0 z" fill="#F2C14E" stroke="#D9A521" strokeWidth="1.5" />
+          <ellipse cx="170" cy="162" rx="24" ry="9" fill="#7E1F14" />
+          {[52, 78].map((x, i) => (
+            <circle key={i} cx={x} cy={162} r="4.5" fill="#C0392B" />
+          ))}
+          <text x="296" y="168" fontSize="18" fontWeight="800" fill="#C0392B">✕</text>
+          <text x="170" y="212" textAnchor="middle" fontSize="11.5" fill={C.inkSoft}>血流がとだえ、心臓の筋肉がこわれます</text>
+        </svg>
+      </div>
+    );
+  }
+  if (id === "stages") {
+    return (
+      <div style={wrap} className="avoid-break">
+        <svg viewBox="0 0 340 96" style={{ width: "100%", maxWidth: 400 }} aria-hidden="true">
+          <rect x="10" y="22" width="88" height="30" fill="#33A165" />
+          <rect x="98" y="22" width="88" height="30" fill="#E0A100" />
+          <rect x="186" y="22" width="76" height="30" fill="#CC4433" />
+          <polygon points="262,12 262,62 306,37" fill="#8E2A1E" />
+          <text x="54" y="42" textAnchor="middle" fontSize="13" fontWeight="800" fill="#fff">安全</text>
+          <text x="142" y="42" textAnchor="middle" fontSize="13" fontWeight="800" fill="#fff">危険</text>
+          <text x="224" y="42" textAnchor="middle" fontSize="13" fontWeight="800" fill="#fff">超危険</text>
+          <text x="142" y="74" textAnchor="middle" fontSize="11.5" fill={C.inkSoft}>不安定狭心症</text>
+          <text x="240" y="74" textAnchor="middle" fontSize="11.5" fill={C.inkSoft}>心筋梗塞</text>
+          <text x="54" y="74" textAnchor="middle" fontSize="11.5" fill={C.inkSoft}>ふだんの状態</text>
+          <text x="170" y="92" textAnchor="middle" fontSize="11.5" fill={C.inkSoft}>プラークが破れるほど、命の危険がせまります</text>
+        </svg>
+      </div>
+    );
+  }
+  if (id === "protect") {
+    return (
+      <div style={wrap} className="avoid-break">
+        <svg viewBox="0 0 340 180" style={{ width: "100%", maxWidth: 400 }} aria-hidden="true">
+          <path d="M170 34 C 128 6 66 34 74 92 C 80 138 128 166 168 156 C 214 166 258 136 264 92 C 270 40 214 8 170 34 Z"
+            fill="#FADBD3" stroke="#E8A99C" strokeWidth="3" />
+          <path d="M168 30 C 160 60 150 96 142 140" stroke="#C0392B" strokeWidth="5" fill="none" strokeLinecap="round" />
+          <path d="M150 70 C 176 84 198 104 212 128" stroke="#C0392B" strokeWidth="4" fill="none" strokeLinecap="round" />
+          <path d="M158 46 C 130 62 112 88 104 116" stroke="#C0392B" strokeWidth="4" fill="none" strokeLinecap="round" />
+          {/* カテーテルで治した場所（ステント） */}
+          {[0, 1, 2, 3].map((i) => (
+            <path key={i} d={`M${146 - i * 2.2} ${86 + i * 11} q8 4 14 2`} stroke="#1B77CB" strokeWidth="3" fill="none" />
+          ))}
+          <line x1="152" y1="104" x2="242" y2="58" stroke={C.inkSoft} strokeWidth="1.2" />
+          <text x="246" y="54" fontSize="11.5" fontWeight="700" fill="#1B77CB">カテーテルで</text>
+          <text x="246" y="68" fontSize="11.5" fontWeight="700" fill="#1B77CB">治した場所</text>
+          {/* 全体を守る（緑の点線の輪） */}
+          <ellipse cx="169" cy="90" rx="116" ry="72" fill="none" stroke="#33A165" strokeWidth="2.5" strokeDasharray="8 6" />
+          <text x="170" y="177" textAnchor="middle" fontSize="11.5" fontWeight="700" fill="#33A165">LDLコレステロールの管理は、血管ぜんたいを守ります</text>
+        </svg>
+        <div style={cap}>カテーテル治療が治すのは詰まった場所。それ以外の場所を守るのがLDLの管理です</div>
+      </div>
+    );
+  }
+  return null;
+}
+
 function Blocks({ blocks }) {
   return (
     <>
       {blocks.map((b, i) => {
+        if (b.t === "fig") return <TopicFig key={i} id={b.v} />;
         if (b.t === "p") return <p key={i} style={{ fontSize: 15, lineHeight: 1.95, color: C.ink, margin: "0 0 14px" }}>{b.v}</p>;
         if (b.t === "list") return (
           <div key={i} style={{ margin: "0 0 14px" }}>
@@ -962,6 +1046,28 @@ function GoalCard({ ldl, hba1c, records, targets }) {
             }}>{i.ok == null ? "記録なし" : i.ok ? "達成" : "未達成"}</span>
           </div>
         ))}
+      </div>
+    </Card>
+  );
+}
+
+/* 毎月1日のチェック（体重測定と禁煙のふり返り）。「きょう」の一番上に出す */
+function MonthFirstAlert({ weights }) {
+  const t = todayISO();
+  if (parseISO(t).getDate() !== 1) return null;
+  const weightDone = !!(weights && weights[ymOf(t)]);
+  return (
+    <Card style={{ borderColor: C.evening, borderLeft: `6px solid ${C.evening}` }}>
+      <div style={{ fontSize: 16, fontWeight: 800, color: C.evening }}>きょうは月はじめのチェックの日です</div>
+      <div style={{ fontSize: 13.5, color: C.ink, lineHeight: 2.0, marginTop: 8 }}>
+        {!weightDone && (
+          <p style={{ margin: 0 }}>・<b>体重</b>をはかって、下の「今月の体重」に入れましょう。</p>
+        )}
+        <p style={{ margin: 0 }}>
+          ・たばこを吸っていた方は、<b>禁煙が続いているか</b>ふり返ってみましょう。
+          禁煙は再発予防にとても大切です。むずかしいときは主治医に相談してください。
+          もともと吸わない方は、そのままで大丈夫です。
+        </p>
       </div>
     </Card>
   );
@@ -3050,6 +3156,46 @@ function ExportSummary({ dates, records, targets, plan }) {
 /* 書き出しの印刷用の表。以前は「1日=1行・項目=列」だったが、項目を全部選ぶと列が
    増えすぎて紙の右で切れた。医療者モードの印刷と同じ「週ごと・項目=行」の形にすれば、
    列数は曜日ぶんで固定なので何項目選んでもはみ出さない。メモは表の下に日付つきで並べる */
+/* 書き出しサマリー用：管理目標の達成状況（血圧は書き出し期間の平均で判定） */
+function PrintGoalRow({ ldl, hba1c, records, dates, targets }) {
+  const lastOf = (m) => {
+    const ks = Object.keys(m || {}).filter((k) => m[k]).sort();
+    return ks.length ? Number(m[ks[ks.length - 1]]) : null;
+  };
+  const ldlV = lastOf(ldl);
+  const a1cV = lastOf(hba1c);
+  const ts = Number(targets && targets.sys) || 125;
+  const td = Number(targets && targets.dia) || 75;
+  const st = weekStats(dates, records);
+  const items = [
+    { name: "LDL", disp: ldlV != null ? `${ldlV}` : null, unit: "mg/dL", goal: "55未満", ok: ldlV != null ? ldlV < 55 : null },
+    { name: "家庭血圧", disp: st.sys != null ? `${Math.round(st.sys)}/${st.dia == null ? "-" : Math.round(st.dia)}` : null, unit: "mmHg", goal: `${ts}/${td}未満`, ok: st.sys != null ? (st.sys < ts && (st.dia == null || st.dia < td)) : null },
+    { name: "HbA1c", disp: a1cV != null ? `${a1cV}` : null, unit: "%", goal: "7.0未満", ok: a1cV != null ? a1cV < 7.0 : null },
+  ];
+  return (
+    <div style={{ marginTop: 10 }}>
+      <div style={{ fontSize: 12.5, fontWeight: 700, color: C.inkSoft, marginBottom: 6 }}>管理目標の達成状況</div>
+      <div className="flex flex-wrap gap-2">
+        {items.map((i) => (
+          <div key={i.name} style={{ border: `1px solid ${C.line}`, borderRadius: 3, padding: "7px 10px", minWidth: 128 }}>
+            <div style={{ fontSize: 10.5, color: C.inkSoft }}>{i.name}（目標 {i.goal}）</div>
+            <div className="flex items-center gap-2" style={{ marginTop: 2 }}>
+              <span style={{ fontSize: 15, fontWeight: 800, color: C.ink, ...NUM }}>
+                {i.disp || "—"}{i.disp && <span style={{ fontSize: 9.5, fontWeight: 600, marginLeft: 2, color: C.inkSoft }}>{i.unit}</span>}
+              </span>
+              <span style={{
+                padding: "2px 8px", borderRadius: 3, fontSize: 10.5, fontWeight: 800,
+                background: i.ok == null ? C.line : i.ok ? C.good : C.alert,
+                color: i.ok == null ? C.inkSoft : "#fff",
+              }}>{i.ok == null ? "記録なし" : i.ok ? "達成" : "未達成"}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* 書き出しの印刷用：採血値の推移グラフ（期間内の記録があるときだけ出す） */
 function PrintLabChart({ title, unit, target, targetLabel, values, from, to, yDomain }) {
   const entries = Object.keys(values || {}).filter((k) => values[k] && k >= from && k <= to).sort();
@@ -3216,6 +3362,7 @@ function ExportPreview({ data, onClose }) {
       {showSummary && records && (
         <div style={{ marginBottom: 14 }}>
           <ExportSummary dates={dates} records={records} targets={targets} plan={plan} />
+          <PrintGoalRow ldl={ldl} hba1c={hba1c} records={records} dates={dates} targets={targets} />
         </div>
       )}
 
@@ -4247,7 +4394,7 @@ function ClinicianView() {
 
           <Card title="推移"><Charts dates={dates} records={merged} targets={meta.targets} /></Card>
 
-          <Card title="過去の記録（血圧・脈拍）">
+          <Card title="過去の記録（血圧・脈拍等）">
             <div className="flex flex-col gap-5">
               {weeks.map((w, i) => (
                 <div key={i} className="avoid-break">
@@ -4805,6 +4952,7 @@ export default function App() {
         {mode === "patient" && !settings && tab === "today" && (
           <div className="flex flex-col gap-4">
             <VisitAlert visits={visits} visitTimes={visitTimes} />
+            <MonthFirstAlert weights={weights} />
             <SignPanel signs={signs} />
             <TodayView date={date} setDate={setDate} rec={rec} update={update} targets={targets} plan={medPlan}
               weights={weights} setWeights={setWeights} profile={profile} />
@@ -4824,13 +4972,13 @@ export default function App() {
             <LabCard title="HbA1c（血糖の指標）" sub="採血の結果を記録します。目標は 7.0% 未満です"
               unit="%" target={7.0} targetLabel="7.0" step="0.1" values={hba1c} setValues={setHba1c}
               yDomain={[(m) => Math.max(4, Math.floor(m - 2)), (m) => Math.max(8, Math.ceil(m + 1))]} />
-            <Card title={`この${weeks}週間`}>
+            <Card title={`この${weeks}週間（血圧・脈拍等）`}>
               <WeekTabs value={weeks} onChange={setWeeks} options={[2, 4, 8, 12]} />
               <SummaryCard dates={dates} records={records} targets={targets} plan={medPlan} />
               <Charts dates={dates} records={records} targets={targets} />
             </Card>
 
-            <Card title="過去の記録（血圧・脈拍）">
+            <Card title="過去の記録（血圧・脈拍等）">
               <PeriodTabs options={periodOptions} value={period || { type: "week", key: periodOptions.weeks[0] }} onChange={setPeriod} />
               <div className="flex flex-col gap-5">
                 {shownWeeks.map((w, i) => (
