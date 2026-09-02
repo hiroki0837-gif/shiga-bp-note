@@ -11,6 +11,7 @@ export default defineConfig({
         main: resolve(__dirname, "index.html"),
         terminal: resolve(__dirname, "terminal.html"),
         heartFailure: resolve(__dirname, "heart-failure.html"),
+        acs: resolve(__dirname, "acs.html"),
       },
     },
   },
