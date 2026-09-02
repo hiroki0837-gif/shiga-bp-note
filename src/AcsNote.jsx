@@ -3120,35 +3120,102 @@ function ExportCard({ records, plan, weights, ldl, hba1c, targets, preview, setP
   );
 }
 
+/* 「きろく」のサマリーと同じ項目構成で、書き出し期間の血圧等をまとめる */
 function ExportSummary({ dates, records, targets, plan }) {
   const st = weekStats(dates, records);
   const ts = Number(targets && targets.sys) || null;
+  const td = Number(targets && targets.dia) || null;
   const sysVals = dates.flatMap((d) => (records[d] ? [records[d].amS, records[d].pmS] : [])).filter((v) => v).map(Number);
   const under = ts && sysVals.length ? Math.round((sysVals.filter((v) => v < ts).length / sysVals.length) * 100) : null;
+  const high = dates.filter((d) => {
+    const r = records[d]; if (!r) return false;
+    return [r.amS, r.pmS].some((v) => v && Number(v) >= 180) || [r.amD, r.pmD].some((v) => v && Number(v) >= 110);
+  }).length;
   const mv = medVals(dates, records, plan);
   const adh = mv.length ? Math.round((mv.filter((v) => v === 1).length / mv.length) * 100) : null;
   const irr = dates.reduce((n, d) => n + (records[d] ? (records[d].amI ? 1 : 0) + (records[d].pmI ? 1 : 0) : 0), 0);
+  const irrDays = dates.filter((d) => records[d] && (records[d].amI || records[d].pmI)).length;
   const bp = (a, b) => (a == null ? "—" : `${Math.round(a)}/${b == null ? "-" : Math.round(b)}`);
   const items = [
-    ["平均 血圧", bp(st.sys, st.dia), "mmHg"],
-    ["朝の平均", bp(st.amS, st.amD), "mmHg"],
-    ["夜の平均", bp(st.pmS, st.pmD), "mmHg"],
-    ["平均 脈拍", st.hr == null ? "—" : Math.round(st.hr), "回/分"],
-    ["上の血圧が目標未満", under == null ? "—" : under, "%"],
-    ["服薬 達成", adh == null ? "—" : adh, "%"],
-    ["不整脈マーク", irr, "回"],
-    ["記録した日", st.days, `日 / ${dates.length}日`],
+    ["平均 血圧", bp(st.sys, st.dia), "mmHg", C.ink],
+    ["朝の平均", bp(st.amS, st.amD), "mmHg", C.morning],
+    ["夜の平均", bp(st.pmS, st.pmD), "mmHg", C.evening],
+    ["平均 脈拍", st.hr == null ? "—" : Math.round(st.hr), "回/分", C.ink],
+    ["上の血圧が目標未満だった割合", under == null ? "—" : under, "%", under != null && under < 50 ? C.alert : C.good],
+    ["180/110超の日", high, "日", high ? C.alert : C.ink],
+    ["服薬 達成", adh == null ? "—" : adh, "%", adh != null && adh < 80 ? C.alert : C.good],
+    ["不整脈マーク", irr ? `${irr}回 / ${irrDays}日` : 0, irr ? "" : "回", irr ? C.alert : C.ink],
+    ["記録した日", st.days, `日 / ${dates.length}日`, C.ink],
   ];
   return (
-    <div className="flex flex-wrap gap-2">
-      {items.map(([l, v, u]) => (
-        <div key={l} style={{ border: `1px solid ${C.line}`, borderRadius: 3, padding: "7px 10px", minWidth: 96 }}>
-          <div style={{ fontSize: 10.5, color: C.inkSoft }}>{l}</div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: C.ink, ...NUM }}>
-            {v}<span style={{ fontSize: 9.5, fontWeight: 600, marginLeft: 3, color: C.inkSoft }}>{u}</span>
+    <>
+      <div style={{ fontSize: 12.5, fontWeight: 700, color: C.inkSoft, margin: "10px 0 6px" }}>血圧・脈拍等のサマリー</div>
+      <div className="flex flex-wrap gap-2">
+        {items.map(([l, v, u, tone]) => (
+          <div key={l} style={{ border: `1px solid ${C.line}`, borderRadius: 3, padding: "7px 10px", minWidth: 96 }}>
+            <div style={{ fontSize: 10.5, color: C.inkSoft }}>{l}</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: tone, ...NUM }}>
+              {v}<span style={{ fontSize: 9.5, fontWeight: 600, marginLeft: 3, color: C.inkSoft }}>{u}</span>
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
+      {ts && (
+        <p style={{ fontSize: 12, color: C.inkSoft, margin: "8px 0 0", ...NUM }}>
+          目標：{ts}/{td || "—"} mmHg 未満（家庭血圧）
+        </p>
+      )}
+    </>
+  );
+}
+
+/* 書き出し用：採血結果の一覧表（LDL・HbA1c） */
+function PrintLabTable({ ldl, hba1c, from, to, cols }) {
+  const showL = !!cols.ldl;
+  const showA = !!cols.hba1c;
+  const keys = new Set([
+    ...(showL ? Object.keys(ldl || {}) : []),
+    ...(showA ? Object.keys(hba1c || {}) : []),
+  ]);
+  const list = [...keys].filter((k) => k >= from && k <= to && ((ldl && ldl[k]) || (hba1c && hba1c[k]))).sort();
+  if (!list.length) return null;
+  const th = { border: `1px solid ${C.line}`, padding: "6px 8px", fontSize: 11.5, fontWeight: 700, color: C.ink, background: C.tint, whiteSpace: "nowrap" };
+  const td = { border: `1px solid ${C.line}`, padding: "6px 8px", fontSize: 12.5, textAlign: "center", color: C.ink, ...NUM };
+  const badge = (ok) => (
+    <span style={{
+      padding: "2px 6px", borderRadius: 3, fontSize: 11, fontWeight: 800, whiteSpace: "nowrap",
+      background: ok ? C.good : C.alert, color: "#fff",
+    }}>{ok ? "達成" : "未達成"}</span>
+  );
+  return (
+    <div className="avoid-break" style={{ marginBottom: 16 }}>
+      <div style={{ fontSize: 12.5, fontWeight: 700, color: C.inkSoft, marginBottom: 5 }}>採血の結果</div>
+      <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed" }}>
+        <thead>
+          <tr>
+            <th style={{ ...th, textAlign: "left" }}>採血日</th>
+            {showL && <th style={th}>LDL(mg/dL)<br /><span style={{ fontWeight: 400, color: C.inkSoft }}>目標55未満</span></th>}
+            {showL && <th style={th}>達成</th>}
+            {showA && <th style={th}>HbA1c(%)<br /><span style={{ fontWeight: 400, color: C.inkSoft }}>目標7.0未満</span></th>}
+            {showA && <th style={th}>達成</th>}
+          </tr>
+        </thead>
+        <tbody>
+          {list.map((k) => {
+            const lv = ldl && ldl[k] ? Number(ldl[k]) : null;
+            const av = hba1c && hba1c[k] ? Number(hba1c[k]) : null;
+            return (
+              <tr key={k}>
+                <td style={{ ...td, textAlign: "left" }}>{k}</td>
+                {showL && <td style={td}>{lv != null ? lv : <span style={{ color: C.line }}>—</span>}</td>}
+                {showL && <td style={td}>{lv != null ? badge(lv < 55) : <span style={{ color: C.line }}>—</span>}</td>}
+                {showA && <td style={td}>{av != null ? av : <span style={{ color: C.line }}>—</span>}</td>}
+                {showA && <td style={td}>{av != null ? badge(av < 7.0) : <span style={{ color: C.line }}>—</span>}</td>}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -3173,7 +3240,7 @@ function PrintGoalRow({ ldl, hba1c, records, dates, targets }) {
     { name: "HbA1c", disp: a1cV != null ? `${a1cV}` : null, unit: "%", goal: "7.0未満", ok: a1cV != null ? a1cV < 7.0 : null },
   ];
   return (
-    <div style={{ marginTop: 10 }}>
+    <div>
       <div style={{ fontSize: 12.5, fontWeight: 700, color: C.inkSoft, marginBottom: 6 }}>管理目標の達成状況</div>
       <div className="flex flex-wrap gap-2">
         {items.map((i) => (
@@ -3361,8 +3428,8 @@ function ExportPreview({ data, onClose }) {
     <Card title="印刷プレビュー" sub={`${dates[0]} 〜 ${dates[dates.length - 1]}（記録 ${tbl.rows.length}日）`}>
       {showSummary && records && (
         <div style={{ marginBottom: 14 }}>
-          <ExportSummary dates={dates} records={records} targets={targets} plan={plan} />
           <PrintGoalRow ldl={ldl} hba1c={hba1c} records={records} dates={dates} targets={targets} />
+          <ExportSummary dates={dates} records={records} targets={targets} plan={plan} />
         </div>
       )}
 
@@ -3384,7 +3451,10 @@ function ExportPreview({ data, onClose }) {
       )}
 
       {showTable !== false && (
-        <ExportWeekTables dates={dates} records={records} plan={plan} cols={cols || DEFAULT_COLS} weights={weights} ldl={ldl} hba1c={hba1c} />
+        <>
+          <PrintLabTable ldl={ldl} hba1c={hba1c} from={dates[0]} to={dates[dates.length - 1]} cols={cols || DEFAULT_COLS} />
+          <ExportWeekTables dates={dates} records={records} plan={plan} cols={cols || DEFAULT_COLS} weights={weights} ldl={ldl} hba1c={hba1c} />
+        </>
       )}
       <div className="no-print flex gap-2" style={{ marginTop: 14 }}>
         <Btn small onClick={() => window.print()}>印刷 / PDFで保存</Btn>
