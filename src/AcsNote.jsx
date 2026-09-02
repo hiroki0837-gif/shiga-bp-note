@@ -899,6 +899,73 @@ function MonthlyWeightCard({ date, weights, setWeights, profile }) {
 }
 
 
+/* きろくの先頭：管理目標（LDL・血圧・HbA1c）の達成状況と、状況に応じたメッセージ */
+function GoalCard({ ldl, hba1c, records, targets }) {
+  const lastOf = (m) => {
+    const ks = Object.keys(m).filter((k) => m[k]).sort();
+    return ks.length ? Number(m[ks[ks.length - 1]]) : null;
+  };
+  const ldlV = lastOf(ldl);
+  const a1cV = lastOf(hba1c);
+  const ts = Number(targets.sys) || 125;
+  const td = Number(targets.dia) || 75;
+  const days = Array.from({ length: 14 }, (_, i) => addDays(todayISO(), -13 + i));
+  const st = weekStats(days, records);
+  const items = [
+    { name: "LDLコレステロール", disp: ldlV != null ? `${ldlV} mg/dL` : null, goal: "55mg/dL未満",
+      ok: ldlV != null ? ldlV < 55 : null },
+    { name: "家庭血圧", disp: st.sys != null ? `${Math.round(st.sys)}/${st.dia == null ? "-" : Math.round(st.dia)}` : null, goal: `${ts}/${td}未満`,
+      ok: st.sys != null ? (st.sys < ts && (st.dia == null || st.dia < td)) : null },
+    { name: "HbA1c", disp: a1cV != null ? `${a1cV} %` : null, goal: "7.0%未満",
+      ok: a1cV != null ? a1cV < 7.0 : null },
+  ];
+  const known = items.filter((i) => i.ok != null);
+  const okN = known.filter((i) => i.ok).length;
+  const missing = items.filter((i) => i.ok == null).map((i) => i.name);
+  let tone = C.inkSoft;
+  let msg;
+  if (!known.length) {
+    msg = "まずは血圧の記録と、採血の結果（LDL・HbA1c）を入れていきましょう。";
+  } else if (okN === known.length) {
+    tone = C.good;
+    msg = (missing.length ? "記録のある目標はすべて達成しています。" : "3つの目標をすべて達成しています。")
+      + "すばらしいです！ この調子で続けましょう。";
+  } else if (okN > 0) {
+    tone = C.morning;
+    const ng = known.filter((i) => !i.ok).map((i) => i.name).join("・");
+    msg = `${ng}があと少しです。お薬をきちんと続けて、次の受診のときに主治医と相談しましょう。`;
+  } else {
+    tone = C.alert;
+    msg = "目標達成はこれからが本番です。お薬を続けながら、生活の工夫を少しずつ。次の受診のときに主治医と相談しましょう。";
+  }
+  if (known.length && missing.length) {
+    msg += `（${missing.join("・")}はまだ記録がありません）`;
+  }
+  return (
+    <Card title="管理目標の達成状況" sub="LDL・HbA1cは直近の採血、血圧は直近2週間の平均で見ています">
+      <div style={{ borderLeft: `5px solid ${tone}`, background: tone === C.alert ? C.alertBg : C.tint, borderRadius: 3, padding: "10px 12px", marginBottom: 14 }}>
+        <p style={{ fontSize: 13.5, fontWeight: 700, color: C.ink, margin: 0, lineHeight: 1.9 }}>{msg}</p>
+      </div>
+      <div className="flex flex-col gap-2">
+        {items.map((i) => (
+          <div key={i.name} className="flex items-center gap-2" style={{ border: `1px solid ${C.line}`, borderRadius: 3, padding: "9px 12px" }}>
+            <span style={{ fontSize: 13.5, fontWeight: 700, color: C.ink, flex: 1, minWidth: 0 }}>
+              {i.name}
+              <span style={{ display: "block", fontSize: 11.5, color: C.inkSoft, fontWeight: 600 }}>目標 {i.goal}</span>
+            </span>
+            <span style={{ fontSize: 15, fontWeight: 800, color: C.ink, ...NUM }}>{i.disp || "—"}</span>
+            <span style={{
+              padding: "5px 10px", borderRadius: 3, fontSize: 12, fontWeight: 800, flexShrink: 0,
+              background: i.ok == null ? C.line : i.ok ? C.good : C.alert,
+              color: i.ok == null ? C.inkSoft : "#fff",
+            }}>{i.ok == null ? "記録なし" : i.ok ? "達成" : "未達成"}</span>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
 /* きょう用：直近の採血値（最新値と達成状況＋入力。推移は「きろく」で） */
 function LatestLabCard({ title, unit, target, targetLabel, step, values, setValues }) {
   const [d, setD] = useState(todayISO());
@@ -4699,6 +4766,7 @@ export default function App() {
 
         {mode === "patient" && !settings && tab === "sum" && (
           <div className="flex flex-col gap-4">
+            <GoalCard ldl={ldl} hba1c={hba1c} records={records} targets={targets} />
             <FeedbackCard dates={dates} records={records} targets={targets} plan={medPlan} />
             <LabCard title="LDLコレステロール" sub="採血の結果を記録します。目標は 55mg/dL 未満です"
               unit="mg/dL" target={55} targetLabel="55" step="1" values={ldl} setValues={setLdl}
