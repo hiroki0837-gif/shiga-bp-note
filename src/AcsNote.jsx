@@ -3194,9 +3194,9 @@ function PrintLabTable({ ldl, hba1c, from, to, cols }) {
         <thead>
           <tr>
             <th style={{ ...th, textAlign: "left" }}>採血日</th>
-            {showL && <th style={th}>LDL(mg/dL)<br /><span style={{ fontWeight: 400, color: C.inkSoft }}>目標55未満</span></th>}
+            {showL && <th style={th}>LDL(mg/dL)</th>}
             {showL && <th style={th}>達成</th>}
-            {showA && <th style={th}>HbA1c(%)<br /><span style={{ fontWeight: 400, color: C.inkSoft }}>目標7.0未満</span></th>}
+            {showA && <th style={th}>HbA1c(%)</th>}
             {showA && <th style={th}>達成</th>}
           </tr>
         </thead>
