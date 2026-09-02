@@ -339,11 +339,12 @@ const emptyTargets = () => ({ sys: "125", dia: "75" });
 const hasData = (r) => !!(r && (r.amS || r.pmS || r.amH || r.pmH || r.amI || r.pmI || r.mA || r.mN || r.mP || r.mB || hasMemo(r)));
 
 function migrate(d) {
-  const out = { schema: DATA_SCHEMA, records: {}, targets: emptyTargets(), learned: {}, visits: [], security: emptySecurity(), medPlan: emptyPlan(), exportPrefs: emptyExportPrefs(), profile: { ...emptyProfile(), id: newAnonId() }, weights: {}, theme: emptyTheme(), visitTimes: {}, ldl: {} };
+  const out = { schema: DATA_SCHEMA, records: {}, targets: emptyTargets(), learned: {}, visits: [], security: emptySecurity(), medPlan: emptyPlan(), exportPrefs: emptyExportPrefs(), profile: { ...emptyProfile(), id: newAnonId() }, weights: {}, theme: emptyTheme(), visitTimes: {}, ldl: {}, hba1c: {} };
   if (!d || typeof d !== "object") return out;
   out.theme = { ...emptyTheme(), ...(d.theme || {}) };
   out.visitTimes = d.visitTimes && typeof d.visitTimes === "object" ? d.visitTimes : {};
   out.ldl = d.ldl && typeof d.ldl === "object" ? d.ldl : {};
+  out.hba1c = d.hba1c && typeof d.hba1c === "object" ? d.hba1c : {};
   out.targets = { ...out.targets, ...(d.targets || {}) };
   out.learned = d.learned && typeof d.learned === "object" ? d.learned : {};
   out.visits = Array.isArray(d.visits) ? d.visits : [];
@@ -898,25 +899,25 @@ function MonthlyWeightCard({ date, weights, setWeights, profile }) {
 }
 
 
-/* ---------- LDLコレステロールの記録（ACS手帳の主役。採血のたびに入れる） ---------- */
-function LdlCard({ ldl, setLdl }) {
+/* ---------- 採血値の記録カード（LDL・HbA1cで共用。採血のたびに入れる） ---------- */
+function LabCard({ title, sub, unit, target, targetLabel, step, values, setValues, yDomain }) {
   const [d, setD] = useState(todayISO());
   const [v, setV] = useState("");
-  const entries = Object.keys(ldl).filter((k) => ldl[k]).sort();
-  const data = entries.map((k) => ({ d: fmtMD(k), LDL: Number(ldl[k]) }));
-  const last = entries.length ? Number(ldl[entries[entries.length - 1]]) : null;
-  const ok = last != null && last < 55;
+  const entries = Object.keys(values).filter((k) => values[k]).sort();
+  const data = entries.map((k) => ({ d: fmtMD(k), 値: Number(values[k]) }));
+  const last = entries.length ? Number(values[entries[entries.length - 1]]) : null;
+  const ok = last != null && last < target;
   return (
-    <Card title="LDLコレステロール" sub="採血の結果を記録します。目標は 55mg/dL 未満です">
+    <Card title={title} sub={sub}>
       {last != null && (
         <div className="flex items-center gap-3 flex-wrap" style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 30, fontWeight: 800, color: ok ? C.good : C.alert, ...NUM }}>
-            {last}<span style={{ fontSize: 13, fontWeight: 600, marginLeft: 4, color: C.inkSoft }}>mg/dL</span>
+            {last}<span style={{ fontSize: 13, fontWeight: 600, marginLeft: 4, color: C.inkSoft }}>{unit}</span>
           </div>
           <span style={{
             padding: "6px 12px", borderRadius: 3, fontSize: 13.5, fontWeight: 800,
             background: ok ? C.good : C.alert, color: "#fff",
-          }}>{ok ? "目標を達成しています" : "目標 55mg/dL 未満"}</span>
+          }}>{ok ? "目標を達成しています" : `目標 ${targetLabel}${unit} 未満`}</span>
         </div>
       )}
       {data.length >= 2 && (
@@ -926,11 +927,11 @@ function LdlCard({ ldl, setLdl }) {
               <LineChart data={data} margin={{ top: 12, right: 54, bottom: 0, left: -12 }}>
                 <CartesianGrid stroke={C.line} strokeDasharray="2 4" />
                 <XAxis dataKey="d" tick={{ stroke: C.inkSoft, fontSize: 11 }} interval="preserveStartEnd" height={24} />
-                <YAxis domain={[0, (m) => Math.max(100, Math.ceil((m + 10) / 20) * 20)]} tick={{ stroke: C.inkSoft, fontSize: 11 }} />
+                <YAxis domain={yDomain} tick={{ stroke: C.inkSoft, fontSize: 11 }} />
                 <Tooltip contentStyle={{ fontSize: 12, borderRadius: 3, borderColor: C.line }} />
-                <ReferenceLine y={55} stroke={C.good} strokeDasharray="6 4" strokeWidth={1.8}
-                  label={{ value: "目標 55", fontSize: 10.5, fontWeight: 700, fill: C.good, position: "right", offset: 5 }} />
-                <Line dataKey="LDL" stroke={C.evening} strokeWidth={2.4} dot={dotCircle(C.evening)} connectNulls={false} />
+                <ReferenceLine y={target} stroke={C.good} strokeDasharray="6 4" strokeWidth={1.8}
+                  label={{ value: `目標 ${targetLabel}`, fontSize: 10.5, fontWeight: 700, fill: C.good, position: "right", offset: 5 }} />
+                <Line dataKey="値" stroke={C.evening} strokeWidth={2.4} dot={dotCircle(C.evening)} connectNulls={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -939,20 +940,20 @@ function LdlCard({ ldl, setLdl }) {
       <div className="no-print" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
         <input type="date" value={d} max={todayISO()} onChange={(e) => setD(e.target.value)}
           style={{ padding: "9px 8px", border: `1px solid ${C.line}`, borderRadius: 3, fontSize: 14, color: C.ink, minWidth: 0 }} />
-        <NumInput value={v} onChange={setV} placeholder="--" unit="mg/dL" width={110} />
-        <Btn small onClick={() => { if (d && v) { setLdl({ ...ldl, [d]: v }); setV(""); } }}>記録する</Btn>
+        <NumInput value={v} onChange={setV} placeholder="--" unit={unit} width={110} step={step} />
+        <Btn small onClick={() => { if (d && v) { setValues({ ...values, [d]: v }); setV(""); } }}>記録する</Btn>
       </div>
       {entries.length > 0 && (
         <div className="flex flex-col gap-1" style={{ marginTop: 12 }}>
           {entries.slice().reverse().slice(0, 12).map((k) => {
-            const val = Number(ldl[k]);
-            const hit = val < 55;
+            const val = Number(values[k]);
+            const hit = val < target;
             return (
               <div key={k} className="flex items-center gap-2" style={{ borderBottom: `1px solid ${C.line}`, padding: "5px 2px", fontSize: 13.5, ...NUM }}>
                 <span style={{ color: C.inkSoft, width: 96 }}>{k}</span>
-                <span style={{ fontWeight: 800, color: C.ink, width: 90 }}>{val} mg/dL</span>
+                <span style={{ fontWeight: 800, color: C.ink, width: 90 }}>{val} {unit}</span>
                 <span style={{ fontSize: 12, fontWeight: 800, color: hit ? C.good : C.alert }}>{hit ? "達成" : "未達成"}</span>
-                <button className="no-print" onClick={() => { const n = { ...ldl }; delete n[k]; setLdl(n); }}
+                <button className="no-print" onClick={() => { const n = { ...values }; delete n[k]; setValues(n); }}
                   style={{ marginLeft: "auto", border: "none", background: "none", color: C.inkSoft, cursor: "pointer", fontSize: 15 }}>×</button>
               </div>
             );
@@ -4404,6 +4405,7 @@ export default function App() {
   const [weights, setWeights] = useState({});
   const [visitTimes, setVisitTimes] = useState({});
   const [ldl, setLdl] = useState({});      // 採血ごとのLDL値（QRには入れない）
+  const [hba1c, setHba1c] = useState({});  // 採血ごとのHbA1c（QRには入れない）
   const [theme, setTheme] = useState(emptyTheme());
   const [locked, setLocked] = useState(false);
 
@@ -4413,7 +4415,7 @@ export default function App() {
   const applyData = useCallback((d) => {
     setRecords(d.records); setTargets(d.targets); setLearned(d.learned); setVisits(d.visits);
     setMedPlan(d.medPlan); setExportPrefs(d.exportPrefs); setProfile(d.profile); setWeights(d.weights);
-    setTheme(d.theme || emptyTheme()); setVisitTimes(d.visitTimes || {}); setLdl(d.ldl || {});
+    setTheme(d.theme || emptyTheme()); setVisitTimes(d.visitTimes || {}); setLdl(d.ldl || {}); setHba1c(d.hba1c || {});
   }, []);
 
   useEffect(() => {
@@ -4436,7 +4438,7 @@ export default function App() {
   }, [applyData]);
   useEffect(() => {
     if (!loaded || locked) return;
-    const data = { records, targets, learned, visits, visitTimes, medPlan, exportPrefs, profile, weights, ldl, theme, schema: DATA_SCHEMA };
+    const data = { records, targets, learned, visits, visitTimes, medPlan, exportPrefs, profile, weights, ldl, hba1c, theme, schema: DATA_SCHEMA };
     (async () => {
       if (dataKey && security.enabled && canCrypt()) {
         const { iv, payload } = await encryptJSON(dataKey, data);
@@ -4445,7 +4447,7 @@ export default function App() {
         await store.writeRaw({ ...data, security });
       }
     })();
-  }, [records, targets, learned, visits, visitTimes, security, medPlan, exportPrefs, profile, weights, ldl, theme, loaded, locked, dataKey]);
+  }, [records, targets, learned, visits, visitTimes, security, medPlan, exportPrefs, profile, weights, ldl, hba1c, theme, loaded, locked, dataKey]);
 
   const openSettings = () => {
     snap.current = { targets, medPlan, profile, exportPrefs, security, weights, theme };
@@ -4666,7 +4668,12 @@ export default function App() {
         {mode === "patient" && !settings && tab === "sum" && (
           <div className="flex flex-col gap-4">
             <FeedbackCard dates={dates} records={records} targets={targets} plan={medPlan} />
-            <LdlCard ldl={ldl} setLdl={setLdl} />
+            <LabCard title="LDLコレステロール" sub="採血の結果を記録します。目標は 55mg/dL 未満です"
+              unit="mg/dL" target={55} targetLabel="55" step="1" values={ldl} setValues={setLdl}
+              yDomain={[0, (m) => Math.max(100, Math.ceil((m + 10) / 20) * 20)]} />
+            <LabCard title="HbA1c（血糖の指標）" sub="採血の結果を記録します。目標は 7.0% 未満です"
+              unit="%" target={7.0} targetLabel="7.0" step="0.1" values={hba1c} setValues={setHba1c}
+              yDomain={[(m) => Math.max(4, Math.floor(m - 2)), (m) => Math.max(8, Math.ceil(m + 1))]} />
             <Card title={`この${weeks}週間`}>
               <WeekTabs value={weeks} onChange={setWeeks} options={[2, 4, 8, 12]} />
               <SummaryCard dates={dates} records={records} targets={targets} plan={medPlan} />
@@ -4932,7 +4939,7 @@ export default function App() {
                 }}>デモデータを入れる</Btn>
                 {wipe
                   ? <>
-                    <Btn small tone={C.alert} onClick={() => { setRecords({}); setLearned({}); setVisits([]); setWeights({}); setLdl({}); setWipe(false); }}>本当に消す</Btn>
+                    <Btn small tone={C.alert} onClick={() => { setRecords({}); setLearned({}); setVisits([]); setWeights({}); setLdl({}); setHba1c({}); setWipe(false); }}>本当に消す</Btn>
                     <Btn small filled={false} onClick={() => setWipe(false)}>やめる</Btn>
                   </>
                   : <Btn small filled={false} tone={C.alert} onClick={() => setWipe(true)}>記録をすべて消す</Btn>}
