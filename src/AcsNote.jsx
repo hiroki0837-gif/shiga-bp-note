@@ -991,11 +991,6 @@ function LabCard({ title, sub, unit, target, targetLabel, values, setValues, yDo
           })}
         </div>
       )}
-      {entries.length > 0 && (
-        <p style={{ fontSize: 12, color: C.inkSoft, lineHeight: 1.8, marginTop: 12 }}>
-          入力は「きょう」の画面からできます。この値は受診用QRコードには入りません。
-        </p>
-      )}
     </Card>
   );
 }
