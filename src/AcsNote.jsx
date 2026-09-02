@@ -899,6 +899,40 @@ function MonthlyWeightCard({ date, weights, setWeights, profile }) {
 }
 
 
+/* きょう用：直近の採血値（最新値と達成状況＋入力。推移は「きろく」で） */
+function LatestLabCard({ title, unit, target, targetLabel, step, values, setValues }) {
+  const [d, setD] = useState(todayISO());
+  const [v, setV] = useState("");
+  const entries = Object.keys(values).filter((k) => values[k]).sort();
+  const lastK = entries.length ? entries[entries.length - 1] : null;
+  const last = lastK ? Number(values[lastK]) : null;
+  const ok = last != null && last < target;
+  return (
+    <Card title={title} sub={lastK ? `${lastK} の採血` : "採血の結果がわかったら入れてください"}>
+      {last != null && (
+        <div className="flex items-center gap-3 flex-wrap" style={{ marginBottom: 12 }}>
+          <div style={{ fontSize: 28, fontWeight: 800, color: ok ? C.good : C.alert, ...NUM }}>
+            {last}<span style={{ fontSize: 12.5, fontWeight: 600, marginLeft: 4, color: C.inkSoft }}>{unit}</span>
+          </div>
+          <span style={{
+            padding: "6px 12px", borderRadius: 3, fontSize: 13, fontWeight: 800,
+            background: ok ? C.good : C.alert, color: "#fff",
+          }}>{ok ? "目標を達成しています" : `目標 ${targetLabel}${unit} 未満`}</span>
+        </div>
+      )}
+      <div className="no-print" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <input type="date" value={d} max={todayISO()} onChange={(e) => setD(e.target.value)}
+          style={{ padding: "9px 8px", border: `1px solid ${C.line}`, borderRadius: 3, fontSize: 14, color: C.ink, minWidth: 0 }} />
+        <NumInput value={v} onChange={setV} placeholder="--" unit={unit} width={110} step={step} />
+        <Btn small onClick={() => { if (d && v) { setValues({ ...values, [d]: v }); setV(""); } }}>記録する</Btn>
+      </div>
+      <p style={{ fontSize: 12, color: C.inkSoft, lineHeight: 1.8, marginTop: 10 }}>
+        推移のグラフとこれまでの記録は「きろく」で見られます。
+      </p>
+    </Card>
+  );
+}
+
 /* ---------- 採血値の記録カード（LDL・HbA1cで共用。採血のたびに入れる） ---------- */
 function LabCard({ title, sub, unit, target, targetLabel, step, values, setValues, yDomain }) {
   const [d, setD] = useState(todayISO());
@@ -4662,6 +4696,10 @@ export default function App() {
             <SignPanel signs={signs} />
             <TodayView date={date} setDate={setDate} rec={rec} update={update} targets={targets} plan={medPlan}
               weights={weights} setWeights={setWeights} profile={profile} />
+            <LatestLabCard title="直近のLDLコレステロール" unit="mg/dL" target={55} targetLabel="55" step="1"
+              values={ldl} setValues={setLdl} />
+            <LatestLabCard title="直近のHbA1c" unit="%" target={7.0} targetLabel="7.0" step="0.1"
+              values={hba1c} setValues={setHba1c} />
           </div>
         )}
 
