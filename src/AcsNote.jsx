@@ -932,8 +932,7 @@ function GoalCard({ ldl, hba1c, records, targets }) {
       + "すばらしいです！ この調子で続けましょう。";
   } else if (okN > 0) {
     tone = C.morning;
-    const ng = known.filter((i) => !i.ok).map((i) => i.name).join("・");
-    msg = `${ng}があと少しです。お薬をきちんと続けて、次の受診のときに主治医と相談しましょう。`;
+    msg = "お薬をきちんと続けて、次の受診のときに主治医と相談しましょう。";
   } else {
     tone = C.alert;
     msg = "目標達成はこれからが本番です。お薬を続けながら、生活の工夫を少しずつ。次の受診のときに主治医と相談しましょう。";
@@ -4196,7 +4195,7 @@ function ClinicianView() {
 
           <Card title="推移"><Charts dates={dates} records={merged} targets={meta.targets} /></Card>
 
-          <Card title="過去の記録">
+          <Card title="過去の記録（血圧・脈拍）">
             <div className="flex flex-col gap-5">
               {weeks.map((w, i) => (
                 <div key={i} className="avoid-break">
@@ -4780,7 +4779,7 @@ export default function App() {
               <Charts dates={dates} records={records} targets={targets} />
             </Card>
 
-            <Card title="過去の記録">
+            <Card title="過去の記録（血圧・脈拍）">
               <PeriodTabs options={periodOptions} value={period || { type: "week", key: periodOptions.weeks[0] }} onChange={setPeriod} />
               <div className="flex flex-col gap-5">
                 {shownWeeks.map((w, i) => (
