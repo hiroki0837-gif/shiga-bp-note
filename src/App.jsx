@@ -66,7 +66,20 @@ const FONT_CHOICES = [
   ["maru", "丸ゴシック", '"Hiragino Maru Gothic ProN","HGMaruGothicMPRO","HG丸ｺﾞｼｯｸM-PRO","Yu Gothic UI","Meiryo",sans-serif'],
   ["mincho", "明朝", '"Hiragino Mincho ProN","Yu Mincho","游明朝","MS PMincho",serif'],
 ];
-const emptyTheme = () => ({ bg: "sky", font: "gothic" });
+const emptyTheme = () => ({ bg: "sky", font: "gothic", region: "shiga" });
+
+/* 地域ごとの表示名。記録の形式・QR・保存先は共通で、画面に出る名前だけが変わる */
+const APP_REGIONS = [["shiga", "血圧ノート＠しが"], ["iga", "血圧ノート＠いが"]];
+const appNameOf = (region) => (APP_REGIONS.find(([k]) => k === region) || APP_REGIONS[0])[1];
+/* App のレンダー冒頭で現在のテーマから更新する（C と同じ扱い。開発メモ第5節参照） */
+let APP_NAME = appNameOf("shiga");
+/* 案内シールのQRに ?r=iga を付けると、初回からその地域名で始められる */
+const urlRegion = () => {
+  try {
+    const r = new URLSearchParams(window.location.search).get("r");
+    return APP_REGIONS.some(([k]) => k === r) ? r : null;
+  } catch { return null; }
+};
 const themePalette = (t) => {
   const [, , paper, line, tint, tintDeep] = BG_CHOICES.find(([k]) => k === (t && t.bg)) || BG_CHOICES[0];
   return { paper, line, tint, tintDeep };
@@ -2596,7 +2609,7 @@ function SetupScreen({ profile, setProfile, medPlan, setMedPlan, onDone }) {
 
   const head = (sub) => (
     <div style={{ textAlign: "center", marginBottom: 24 }}>
-      <div style={{ fontSize: 22, fontWeight: 800, color: C.ink, letterSpacing: "0.06em" }}>血圧ノート＠しが</div>
+      <div style={{ fontSize: 22, fontWeight: 800, color: C.ink, letterSpacing: "0.06em" }}>{APP_NAME}</div>
       <div style={{ fontSize: 12.5, color: C.inkSoft, marginTop: 6, lineHeight: 1.8 }}>{sub}</div>
     </div>
   );
@@ -2928,7 +2941,7 @@ function ExportCard({ records, plan, weights, targets, preview, setPreview, pref
 
       <div className="flex gap-2 flex-wrap">
         <Btn small disabled={!tbl.rows.length}
-          onClick={() => downloadCSV(`血圧ノート＠しが_${dates[0]}_${dates[dates.length - 1]}.csv`,
+          onClick={() => downloadCSV(`${APP_NAME}_${dates[0]}_${dates[dates.length - 1]}.csv`,
             [tbl.head.join(","), ...tbl.rows.map((r) => r.join(","))].join("\r\n"))}>
           CSVで保存
         </Btn>
@@ -3250,7 +3263,7 @@ function LockScreen({ security, onUnlock, onWipe, unlockWith, unlockWithBio }) {
   return (
     <div style={{ maxWidth: 420, margin: "0 auto", padding: "40px 18px 60px" }}>
       <div style={{ textAlign: "center", marginBottom: 26 }}>
-        <div style={{ fontSize: 22, fontWeight: 800, color: C.ink, letterSpacing: "0.06em" }}>血圧ノート＠しが</div>
+        <div style={{ fontSize: 22, fontWeight: 800, color: C.ink, letterSpacing: "0.06em" }}>{APP_NAME}</div>
         <div style={{ fontSize: 12, color: C.inkSoft, marginTop: 4 }}>ロックを解除してください</div>
       </div>
 
@@ -4141,7 +4154,7 @@ function ClinicianView() {
           </Card>
 
           <div className="no-print flex gap-2 justify-end flex-wrap">
-            <Btn filled={false} onClick={() => downloadCSV(`血圧ノート＠しが_${meta.startDate}_${dates[dates.length - 1]}.csv`, buildCSV(dates, merged))}>
+            <Btn filled={false} onClick={() => downloadCSV(`${APP_NAME}_${meta.startDate}_${dates[dates.length - 1]}.csv`, buildCSV(dates, merged))}>
               CSVで保存
             </Btn>
             <Btn onClick={() => window.print()}>印刷 / PDFで保存</Btn>
@@ -4298,7 +4311,7 @@ function KioskView({ onExit }) {
       {meta && st && (
         <div style={{ position: "absolute", left: -99999, top: 0, width: 718 }} className="kiosk-print">
           <div style={{ padding: "0 0 8px", borderBottom: `2px solid ${C.ink}`, marginBottom: 12 }}>
-            <div style={{ fontSize: 18, fontWeight: 800, color: C.ink }}>血圧ノート＠しが　受診用記録</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: C.ink }}>{APP_NAME}　受診用記録</div>
             <div style={{ fontSize: 12.5, color: C.inkSoft, marginTop: 4, ...NUM }}>
               {meta.startDate} 〜 {dates[dates.length - 1]}（{meta.days}日間・記録 {st.days}日）
               {meta.demo && meta.demo.age != null ? `　${meta.demo.age}歳` : ""}
@@ -4448,10 +4461,14 @@ export default function App() {
       if (!alive) return;
       if (raw && raw.enc) {
         setSecurity({ ...emptySecurity(), ...(raw.security || {}) });
+        if (raw.region) setTheme((t) => ({ ...t, region: raw.region }));
         setVault(raw);
         setLocked(true);
       } else {
         const d = migrate(raw);
+        // URLに ?r= の指定があり、まだ地域を保存していなければ反映する（案内シールQR用）
+        const pr = urlRegion();
+        if (pr && !(raw && raw.theme && raw.theme.region)) d.theme = { ...d.theme, region: pr };
         applyData(d);
         setSecurity(d.security);
         setLocked(!!d.security.enabled);
@@ -4466,7 +4483,8 @@ export default function App() {
     (async () => {
       if (dataKey && security.enabled && canCrypt()) {
         const { iv, payload } = await encryptJSON(dataKey, data);
-        await store.writeRaw({ schema: DATA_SCHEMA, enc: 1, kdfSalt: security.kdfSalt, iv, payload, security });
+        // region はロック画面の表示名に使うため、暗号化の外にも持たせる（個人情報ではない）
+        await store.writeRaw({ schema: DATA_SCHEMA, enc: 1, kdfSalt: security.kdfSalt, iv, payload, security, region: theme.region });
       } else {
         await store.writeRaw({ ...data, security });
       }
@@ -4581,6 +4599,7 @@ export default function App() {
   // 選ばれた背景色に合わせて、枠線・薄い塗り（C.line / C.tint / C.tintDeep）も同系色に切り替える。
   // C はモジュール定数だが、インラインstyleが描画時に参照するので、描画のたびにここで上書きすれば全体に効く
   {
+    APP_NAME = appNameOf(theme.region);
     const pal = themePalette(theme);
     C.paper = pal.paper; C.line = pal.line; C.tint = pal.tint; C.tintDeep = pal.tintDeep;
   }
@@ -4627,7 +4646,7 @@ export default function App() {
       <header className="no-print" style={{ background: "#FFFFFF", borderBottom: `3px solid #54A9F0`, padding: "16px 18px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
           <div>
-            <div style={{ fontSize: 21, fontWeight: 800, letterSpacing: "0.06em", color: C.ink }}>血圧ノート＠しが</div>
+            <div style={{ fontSize: 21, fontWeight: 800, letterSpacing: "0.06em", color: C.ink }}>{APP_NAME}</div>
             <div style={{ fontSize: 11.5, letterSpacing: "0.12em", color: C.inkSoft }}>毎日の記録と高血圧の知識</div>
           </div>
           {/* 狭い画面では折り返して2段目になる。その際は切り替えを左端・設定を右端に離す
@@ -4918,6 +4937,20 @@ export default function App() {
                     }}>{theme.font === k ? "✓ " : ""}{jp}</button>
                 ))}
               </div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.inkSoft, margin: "16px 0 8px" }}>アプリの名前</div>
+              <div className="flex flex-wrap gap-2">
+                {APP_REGIONS.map(([k, name]) => (
+                  <button key={k} onClick={() => setTheme({ ...theme, region: k })}
+                    style={{
+                      padding: "12px 16px", borderRadius: 3, cursor: "pointer",
+                      fontSize: 13.5, fontWeight: 700, color: C.ink,
+                      background: (theme.region || "shiga") === k ? C.tint : "#fff",
+                      border: `2px solid ${(theme.region || "shiga") === k ? C.evening : C.line}`,
+                    }}>{(theme.region || "shiga") === k ? "✓ " : ""}{name}</button>
+                ))}
+              </div>
+              <p style={{ fontSize: 12, color: C.inkSoft, lineHeight: 1.8, margin: "8px 0 0" }}>
+                通院先に合わせて、画面や印刷に出るアプリの名前を切り替えられます。記録の内容は変わりません。</p>
               <p style={{ fontSize: 12, color: C.inkSoft, lineHeight: 1.8, marginTop: 12 }}>
                 選んだ書体が端末に入っていない場合は、標準の書体で表示されます。
               </p>
@@ -4976,7 +5009,7 @@ export default function App() {
         )}
 
         <footer className="no-print" style={{ textAlign: "center", padding: "28px 0 4px", fontSize: 11.5, color: C.inkSoft, ...NUM }}>
-          血圧ノート＠しが v{APP_VERSION}
+          {APP_NAME} v{APP_VERSION}
         </footer>
       </main>
     </div>
