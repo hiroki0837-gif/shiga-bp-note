@@ -221,6 +221,14 @@ Chrome では標準機能を先に試し、失敗したときに自前処理へ�
 
 ---
 
+### 受付端末のオフライン単一HTML版（2026-10-26）
+
+受付PCにファイル1つ置いて使う配布形態。`npx vite build --config vite.terminal-offline.config.js` で
+端末だけを1チャンクにビルドし、生成スクリプト（セッションの scratchpad/make_terminal_offline.py 相当。
+JS/CSSをHTMLへ埋め込み、`</script` は `<\/script` にエスケープ）で「受付端末（オフライン版）.html」を作る。
+file:// でもカメラは動く（Chrome/Edgeはfile://を安全な文脈として扱う）。SW登録は失敗して無視される（想定どおり）。
+注意：**QR形式を変えたら各受付PCのこのファイルも手動で差し替える**こと（配布は手動）。
+
 ## 9. 地図データ
 
 滋賀県19市町の境界（国土数値情報「行政区域」由来）と琵琶湖（Natural Earth）を埋め込み。
