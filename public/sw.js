@@ -46,9 +46,8 @@ self.addEventListener("fetch", (e) => {
   }
 
   // ビルド済みアセットとアイコン：ファイル名にハッシュが入るので、控えがあればそれを使う
-  if (url.pathname.startsWith("/assets/") || url.pathname.startsWith("/icon") ||
-      url.pathname === "/manifest.webmanifest" || url.pathname === "/favicon.svg" ||
-      url.pathname === "/apple-touch-icon.png") {
+  if (url.pathname.includes("/assets/") ||
+      /\/(icon[^/]*\.png|manifest\.webmanifest|favicon\.svg|apple-touch-icon\.png)$/.test(url.pathname)) {
     e.respondWith((async () => {
       const hit = await caches.match(req);
       if (hit) return hit;

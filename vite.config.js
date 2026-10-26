@@ -3,6 +3,8 @@ import react from "@vitejs/plugin-react";
 import { resolve } from "path";
 
 export default defineConfig({
+  // 大学サーバー等のサブフォルダ配置でも動くよう、参照をすべて相対パスにする
+  base: "./",
   plugins: [react()],
   build: {
     rollupOptions: {

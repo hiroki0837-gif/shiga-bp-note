@@ -4840,7 +4840,7 @@ export default function App() {
       const cur = document.querySelector('script[src*="main-"]');
       const mine = cur && (cur.src.match(/main-[\w-]+\.js/) || [])[0];
       if (!mine) return;   // 開発サーバーでは何もしない
-      const res = await fetch(`/?probe=${Date.now()}`, { cache: "no-store" });
+      const res = await fetch(`${window.location.pathname}?probe=${Date.now()}`, { cache: "no-store" });
       const latest = ((await res.text()).match(/main-[\w-]+\.js/) || [])[0];
       if (latest && latest !== mine) {
         updateTried.current = true;
